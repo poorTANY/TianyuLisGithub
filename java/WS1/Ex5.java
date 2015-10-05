@@ -2,7 +2,8 @@
  *  Calaulate the angle between the hour hand and the minute hand
  *  
  *  @author  Tianyu Li
- *  @IDnum.  txl486
+ *  @num.    1568785
+ *  @ID      txl486
  *  @date    2015-10-1
  */
 

@@ -2,7 +2,8 @@
  *  Convert masses into kilograms
  *  
  *  @author  Tianyu Li
- *  @IDnum.  txl486
+ *  @num.    1568785
+ *  @ID      txl486
  *  @date    2015-9-30
  */
 
