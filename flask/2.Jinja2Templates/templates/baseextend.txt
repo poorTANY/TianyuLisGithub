@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Index{% endblock %} 
+{% block head %}
+         {{ super() }}
+         <style>
+         </style>
+{% endblock %}
+{% block body %} 
+<h1>Hello, World!</h1> 
+{% endblock %}
+
+extends 指令声明这个模板衍生自 base.html。在 extends 指令之后,基模板中的 3 个块被 重新定义,模板引擎会将其插入适当的位置。注意新定义的 head 块,在基模板中其内容不 是空的,所以使用 super() 获取原来的内容。

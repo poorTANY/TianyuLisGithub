@@ -1,0 +1,14 @@
+<html>
+<head>
+	{% block head %}
+	<title>{% block title %}
+	{% endblock %} - My Application</title> {% endblock %}
+</head>
+<body>
+	{% block body %}
+	{% endblock %}
+</body>
+</html>
+
+block 标签定义的元素可在衍生模板中修改。在本例中,我们定义了名为 head、title 和
+body 的块。注意,title 包含在 head 中。
