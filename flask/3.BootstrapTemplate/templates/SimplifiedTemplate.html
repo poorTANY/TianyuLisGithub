@@ -1,0 +1,15 @@
+{% extends "errortemplate.html" %}
+
+{% block title %}Flasky{% endblock %}
+
+<!-- just change the content of template -->
+{% block page_content %} 
+<div class="page-header">
+	<h1>Hello, {{ name }}!</h1>
+</div>
+{% endblock %}
+
+{% block scripts %} 
+{{ super() }} 
+{{ moment.include_moment() }} 
+{% endblock %}

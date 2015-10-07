@@ -1,0 +1,12 @@
+{% extends "usemomentjs.html" %} 
+
+{% block title %}Flasky{% endblock %} 
+
+{% block page_content %}
+Hello World!
+
+The local date and time is {{ moment(current_time).format('LLL') }}.
+
+That was {{ moment(current_time).fromNow(refresh=True) }}.
+
+{% endblock %}
