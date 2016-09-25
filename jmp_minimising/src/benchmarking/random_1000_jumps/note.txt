@@ -1,0 +1,23 @@
+$ g++ 1random.s -o run1
+$ time ./run1
+10000
+
+real	0m9.948s
+user	0m9.917s
+sys	0m0.015s
+
+$ g++ 2ordered.s -o run2
+$ time ./run2
+10000
+
+real	0m4.637s
+user	0m4.620s
+sys	0m0.011s
+
+$ g++ 3deleted.s -o run3
+$ time ./run3
+10000
+
+real	0m3.055s
+user	0m3.041s
+sys	0m0.008s

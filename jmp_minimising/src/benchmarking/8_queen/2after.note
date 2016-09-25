@@ -1,0 +1,43 @@
+the number of implicit links:8
+
+explicit links:8
+0->1->9->8->3->2->4->5->6->7
+number of possibility:92
+
+added jmp:
+real	0m4.289s
+user	0m4.235s
+sys	0m0.024s
+
+re-construct:(after1)
+(delete some jump for implicit links):
+real	0m3.997s
+user	0m3.959s
+sys	0m0.019s
+
+1 9 2 3 4 5 6 7 8 :7
+9 0 2 3 4 5 6 7 8 :7
+3 4 5 6 7 0 1 9 8 :7
+4 5 6 7 0 1 9 2 8 :6
+5 6 7 3 8 9 0 1 2 :7
+6 7 3 4 0 1 9 2 8 :6
+7 3 4 5 0 1 9 2 8 :6
+3 4 5 6 0 1 9 2 8 :6
+9 0 1 2 3 4 5 6 7 :7
+0 1 2 3 4 5 6 7 8 :6
+
+optimised£º(after2)
+implicit links:7
+0->1->9->2->3->4->5->6->7->8
+
+real	0m4.067s
+user	0m4.014s
+sys	0m0.028s
+
+insertion
+implicit links:7
+0->2->3->8->9->4->5->6->7->1
+
+real	0m3.926s
+user	0m3.905s
+sys	0m0.012s
