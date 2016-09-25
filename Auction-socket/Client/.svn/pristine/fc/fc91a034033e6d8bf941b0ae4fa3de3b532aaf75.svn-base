@@ -1,0 +1,190 @@
+package waitingRoom;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.*;
+import javax.swing.table.*;
+
+import auction.*;
+
+public class WaitingRoomView extends JPanel implements Observer{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	WaitingRoom model;
+	private JFrame frame = null;
+	 
+    private JTable table = null;
+ 
+    private JScrollPane s_pan = null;
+ 
+    private JButton button_1 = null, button_2 = null, button_3 = null, button_4 = null, confirmButton;
+    
+    private JTextField roomName;
+    
+    private JComboBox<String> availability;
+    
+    private JComboBox<Integer> numberOfPlayers;
+    
+    private JLabel roomLabel, availabilityLabel, numberOfPlayersLabel, roomNameErrorMessage;
+ 
+    public WaitingRoomView(WaitingRoom model, JTable table, JFrame frame) {
+		
+    	this.table = table;
+		this.frame = frame;
+		frame.setTitle("Waiting Room");
+		
+		roomName = new JTextField(10);
+		String[] aOptions = {"Open", "Closed"};
+		availability = new JComboBox<String>(aOptions);
+		Integer[] pOptions = {2,3,4};
+		numberOfPlayers = new JComboBox<Integer>(pOptions);
+		
+		roomLabel = new JLabel("Room Name");
+		availabilityLabel = new JLabel("Availability");
+		numberOfPlayersLabel = new JLabel("Max Players");
+		roomNameErrorMessage = new JLabel("Room name already exists");
+        
+		 button_1 = new JButton("clean");
+	     button_1.addActionListener(ae -> {model.cleanRoom();});
+	        
+	     button_2 = new JButton("add room");
+	     button_2.addActionListener(ae -> {showRoomOptions();});
+	        
+	     button_3 = new JButton("select room");
+	     button_3.addActionListener(ae -> {model.selectRoom(table.getSelectedRow());});
+	        
+	     button_4 = new JButton("refresh");
+	     button_4.addActionListener(ae -> {model.checkForRooms(getRoomNames());});
+	        
+	     confirmButton = new JButton("confirm");
+	     confirmButton.addActionListener(ae -> {if(!roomName.getText().equals("")){
+	    	//roomNameErrorMessage.setVisible(false);
+	     	model.addRoom(roomName.getText(), (String)availability.getSelectedItem(), (Integer)numberOfPlayers.getSelectedItem());
+	     	hideRoomOptions();}});
+	        
+	        roomName.setVisible(false);
+			availability.setVisible(false);
+			numberOfPlayers.setVisible(false);
+			confirmButton.setVisible(false);
+			roomLabel.setVisible(false);
+			availabilityLabel.setVisible(false);
+			numberOfPlayersLabel.setVisible(false);
+			roomNameErrorMessage.setVisible(false);
+        
+        
+        table.setBackground(Color.white);
+        setHorizontalAlignment(table);
+        TableColumnModel tcm = table.getColumnModel();
+        
+        tcm.getColumn(0).setPreferredWidth(50);
+        tcm.getColumn(1).setPreferredWidth(100);
+        tcm.getColumn(2).setPreferredWidth(100);
+        tcm.getColumn(3).setPreferredWidth(100);
+ 
+        s_pan = new JScrollPane(table);
+        
+        this.setLayout(null);
+        add(button_1);
+        add(button_2);
+        add(button_3);
+        add(button_4);
+        button_1.setBounds(140, 20, 120, 35);
+        button_2.setBounds(340, 20, 120, 35);
+        button_3.setBounds(540, 20, 120, 35);
+        button_4.setBounds(540, 500, 120, 35);
+        add(roomLabel);
+	    add(roomName);
+	    add(availabilityLabel);
+	    add(availability);
+	    add(numberOfPlayersLabel);
+	    add(numberOfPlayers);
+	    add(confirmButton);
+	    add(roomNameErrorMessage);
+	    roomNameErrorMessage.setBounds(240,500,120,35);
+        button_1.setBounds(140, 20, 120, 35);
+        button_2.setBounds(340, 20, 120, 35);
+        button_3.setBounds(540, 20, 120, 35);
+        button_4.setBounds(540, 500, 120, 35);
+        roomLabel.setBounds(0,20,100,35);
+        roomName.setBounds(110, 20, 100, 35);
+        availabilityLabel.setBounds(210, 20, 100, 35);
+        availability.setBounds(310,20,100,35);
+        numberOfPlayersLabel.setBounds(410,20,100,35);
+        numberOfPlayers.setBounds(510,20,100,35);
+        confirmButton.setBounds(610,20,100,35);
+        
+
+        button_3.setBounds(540, 20, 120, 35);
+        add(s_pan);
+        s_pan.setBounds(10, 80, 780, 400);
+        
+        frame.add(this);
+        frame.setVisible(true);
+	}
+	
+	private void setHorizontalAlignment(JTable table) {
+		DefaultTableCellRenderer tableCellRenderer = new DefaultTableCellRenderer();
+		tableCellRenderer.setHorizontalAlignment(JLabel.LEFT);
+		for(int i = 0; i< table.getColumnCount();i++)  
+        {  
+            TableColumn col = table.getColumn(table.getColumnName(i));  
+            col.setCellRenderer(tableCellRenderer);  
+        }
+	}
+	
+	public void showRoomOptions(){
+		roomName.setVisible(true);
+		availability.setVisible(true);
+		numberOfPlayers.setVisible(true);
+		confirmButton.setVisible(true);
+		roomLabel.setVisible(true);
+		availabilityLabel.setVisible(true);
+		numberOfPlayersLabel.setVisible(true);
+		button_1.setVisible(false);
+		button_2.setVisible(false);
+		button_3.setVisible(false);
+		
+	}
+	
+	public void hideRoomOptions(){
+		roomName.setVisible(false);
+		availability.setVisible(false);
+		numberOfPlayers.setVisible(false);
+		confirmButton.setVisible(false);
+		roomLabel.setVisible(false);
+		availabilityLabel.setVisible(false);
+		numberOfPlayersLabel.setVisible(false);
+		button_1.setVisible(true);
+		button_2.setVisible(true);
+		button_3.setVisible(true);
+		
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		if(model.isValidRoomName() == false){
+			roomNameErrorMessage.setVisible(true);
+		}
+		
+	}
+	
+	public ArrayList<String> getRoomNames(){
+		
+		ArrayList <String> names = new ArrayList<String>();
+		
+		for(int i = 0; i < table.getRowCount(); i++){
+			names.add(table.getModel().getValueAt(i, 1).toString());
+		}
+		
+		return names;
+	}
+}

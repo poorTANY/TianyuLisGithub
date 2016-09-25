@@ -1,0 +1,354 @@
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Observable;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import dependency.*;
+
+public class Server extends Observable {
+
+	private ServerSocket serverSocket;
+	private int port;
+
+	final int maxThreadNum = 200;
+	final int maxPendingConnectNum = 50;
+
+	// data
+	private ExecutorService tasks = null;
+
+	long serialID;
+	private ArrayList<Room> rooms;
+
+	protected Database database;
+	protected String order = " order by id";
+
+	public Server(String port) throws SQLException {
+
+		// transfer port number
+		try {
+			this.port = Integer.parseInt(port);
+		} catch (NumberFormatException e) {
+			System.out.println("\"" + port + "\" is not an int");
+			return;
+		}
+		System.out.printf("port:%d\n", this.port);
+
+		tasks = Executors.newFixedThreadPool(maxThreadNum);
+		database = new Database();
+		rooms = new ArrayList<Room>();
+		// Default room
+		rooms.add(new Room("Default", "Open", "0", "Server"));
+
+		try {
+			serverSocket = new ServerSocket(this.port);
+			System.out.println("Miami Server started...");
+
+			serialID = 1L;
+			database.open();
+			// new ServerView(this);
+
+			checkStatus();
+
+			while (true) {
+				Socket socket = serverSocket.accept();
+				tasks.execute(new ClientThread(socket, serialID++, this));
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public ResultSet getUserDatabase() throws SQLException {
+		ResultSet rs = database.runQuery("SELECT * FROM nameandpasswd");
+
+		setChanged();
+		notifyObservers(rs);
+		return rs;
+	}
+
+	public synchronized void addRoom(String name, String availability, String numberOfPlayers, String owner) {
+		rooms.add(new Room(name, availability, numberOfPlayers, owner));
+	}
+
+	/**
+	 * @return the rooms
+	 */
+	public synchronized ArrayList<Room> getRooms() {
+		return rooms;
+	}
+
+	public synchronized boolean login(String username, String password) {
+		try {
+			return database.checkLogin(username, password);
+		} catch (SQLException e) {
+			return false;
+		}
+	}
+
+	public synchronized boolean register(String username, String password) {
+		try {
+			if (database.checkUsername(username)) {
+				database.insert(username, password, 10000);
+				return true;
+			}
+		} catch (SQLException e) {
+			return false;
+		}
+		return false;
+	}
+
+	public synchronized void checkStatus() {
+
+		Timer t = new Timer();
+
+		t.schedule(new TimerTask() {
+
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+			@Override
+			public void run() {
+
+				String query = "SELECT id,endtime FROM items WHERE status = 'true'";
+
+				ResultSet result = database.runQuery(query);
+
+				ArrayList<Integer> ids = new ArrayList<Integer>();
+
+				long currentTime = System.currentTimeMillis();
+
+				try {
+					while (result.next()) {
+
+						String end = result.getString(2);
+						int id = result.getInt(1);
+
+						long timeEnd = sdf.parse(end).getTime();
+
+						System.out.println(timeEnd - currentTime);
+
+						if (timeEnd < currentTime) {
+
+							// setStatus(id,false);
+							ids.add(id);
+						}
+					}
+
+					for (int i : ids) {
+
+						setStatus(i, false);
+					}
+
+				} catch (SQLException e) {
+					e.printStackTrace();
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}
+			}
+		}, 0, 30000);
+	}
+
+	public synchronized void setStatus(int id, boolean bool) {
+		database.setStatus(id, bool);
+	}
+
+	public String getStatus(int id) {
+		String query = "SELECT status FROM items WHERE id = " + id;
+
+		ResultSet result = database.runQuery(query);
+
+		try {
+			if (result.next()) {
+				String status = result.getString(1);
+
+				return status;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return false + "";
+	}
+
+	public synchronized void updateBid(int id, String user, double price) {
+		database.updateBid(id, user, price);
+	}
+
+	public synchronized void addItem(String name, String bider, String seller, double fixed_price, int time,
+			double start_price, Room room) throws NumberFormatException, SQLException {
+		database.addItem(name, bider, seller, fixed_price, time, start_price,room);
+	}
+
+	public synchronized ResultSet obtainBidList(String user, Room room) {
+		String query = "SELECT * FROM items WHERE bidder = '" + user + "'AND room = '" + room.getName() + "'";
+		return database.runQuery(query + order);
+	}
+
+	public synchronized ResultSet obtainItems(String user, Room room) {
+		String query = "SELECT * FROM items WHERE seller = '" + user + "'AND room = '" + room.getName() + "'";
+		System.out.print(query);
+		return database.runQuery(query + order);
+	}
+
+	public synchronized ResultSet search(String[] keyWords, Room room) {
+		String query = "";
+
+		if (keyWords.length == 0) {
+			query = "SELECT * FROM items WHERE room = '" + room.getName() + "'";
+
+		} else if (keyWords.length == 1) {
+			query = "SELECT * FROM items WHERE name LIKE '%" + keyWords[0] + "%' AND status = 'true' AND room = '" + room.getName() + "'";
+
+		} else {
+			query = "SELECT * FROM items WHERE name LIKE '%" + keyWords[0] + "%' AND status = 'true'";
+			for (int i = 1; i < keyWords.length; i++) {
+				query.concat("OR name LIKE '%" + keyWords[i] + "%'");
+			}
+			query.concat("AND room = '" + room.getName() + "'");
+		}
+
+		System.out.println(query);
+		return database.runQuery(query + order);
+	}
+
+	public User getUser(String username) {
+		User user = null;
+		try {
+			user = database.getUser(username);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return user;
+	}
+
+	public double getCoins(String username) {
+
+		try {
+			return database.getCoins(username);
+
+		} catch (NumberFormatException e) {
+			return 0;
+		} catch (SQLException e) {
+			return 0;
+		}
+	}
+
+	public synchronized void updateCoins(String user, double price) {
+		double oldCoins;
+
+		try {
+			oldCoins = database.getCoins(user);
+
+			String query = "UPDATE users SET coins = '" + (oldCoins - price) + "' WHERE username = '" + user + "'";
+
+			System.out.println(query);
+			database.update(query);
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public synchronized double currentPrice(int id) {
+		String query = "SELECT currentprice FROM items WHERE id = " + id;
+
+		ResultSet result = database.runQuery(query);
+
+		try {
+			if (result.next()) {
+				double currentPrice = result.getDouble(1);
+
+				return currentPrice;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return 0;
+	}
+
+	public synchronized double getFixedPrice(int id) {
+		String query = "SELECT price FROM items WHERE id = " + id;
+
+		ResultSet result = database.runQuery(query);
+
+		try {
+			if (result.next()) {
+				double fixedPrice = result.getDouble(1);
+
+				return fixedPrice;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return 0;
+	}
+
+	public synchronized void returnCoins(int id) {
+		String query = "SELECT bidder, currentprice FROM items WHERE id = " + id;
+
+		ResultSet result = database.runQuery(query);
+
+		try {
+			if (result.next()) {
+
+				String user = result.getString(1);
+				double currentPrice = result.getDouble(2);
+
+				double oldCoins = database.getCoins(user);
+
+				String query2 = "UPDATE users SET coins = '" + (oldCoins + currentPrice) + "' WHERE username = '" + user
+						+ "'";
+
+				System.out.println(query2);
+
+				database.update(query2);
+			}
+		}
+
+		catch (NumberFormatException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public synchronized String bidItem(int id, double price, String user) {
+
+		double coins = getCoins(user);
+		double currentPrice = currentPrice(id);
+		double fixedPrice = getFixedPrice(id);
+		String status = getStatus(id);
+
+		System.out.println(price + "  " + fixedPrice);
+
+		if (id != -1 && price != -1 && price <= coins && price > currentPrice && status.equals("true")) {
+
+			returnCoins(id);
+			updateBid(id, user, price);
+			updateCoins(user, price);
+
+			if (price >= fixedPrice) {
+				setStatus(id, false);
+
+				return "get-item";
+			}
+			return "confirmed";
+		}
+		return "rejected";
+	}
+
+}

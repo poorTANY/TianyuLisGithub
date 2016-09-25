@@ -1,0 +1,25 @@
+package customComponents;
+
+import java.awt.Color;
+import java.awt.Font;
+
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+
+public class CustomLabel extends JLabel{
+	
+	public CustomLabel(String a){
+		super(a);
+
+		setFont(new Font("Apple Casual", 1, 12));
+		setForeground(Color.WHITE);
+	}
+	
+	public CustomLabel(String a, int size){
+		super(a);
+		
+		setFont(new Font("Apple Casual", 1, size));
+		setForeground(Color.WHITE);
+	}
+
+}

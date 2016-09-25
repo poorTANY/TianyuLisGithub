@@ -1,0 +1,87 @@
+package dependency;
+
+import java.sql.*;
+import org.json.*;
+
+public class Protocol {
+
+	/**
+	 * when creating message, the first String is the type of the message now I
+	 * have defined some basic cases
+	 * 
+	 * createMessage("login", "username", "password") for check the username and
+	 * password when login
+	 * 
+	 * createMessage("bool", "true") means this message is a boolean value
+	 * 
+	 * We should define more cases in the future and now it is just a very
+	 * simple protocol, but it works
+	 * 
+	 * We could modify it in the future
+	 * 
+	 * 
+	 * @param args
+	 * @return
+	 */
+	public static String createMessage(String... args) {
+		JSONArray result = new JSONArray();
+		for (String str : args) {
+			result.put(str);
+		}
+
+		return result.toString();
+	}
+
+	public static String[] decodeMessage(String str) {
+
+		if (str == null || str.equals("")) {
+			return new String[0];
+		}
+		
+		JSONArray transitListArray = new JSONArray(str);
+		String[] messages = new String[transitListArray.length()];
+        for (int i = 0; i < transitListArray.length(); i++) {
+            messages[i] = transitListArray.getString(i);
+        }
+        
+		if (messages.length == 1 && messages[0].equals("")) {
+			return new String[0];
+		}
+		return messages;
+	}
+
+	public static String resultSetToJson(ResultSet resultSet) throws SQLException, JSONException {
+		// JSON array
+		JSONArray array = new JSONArray();
+
+		// obtain number of rows
+		ResultSetMetaData metaData = resultSet.getMetaData();
+		int columnCount = metaData.getColumnCount();
+
+		// ResultSet to JSON
+		while (resultSet.next()) {
+			JSONObject jsonObj = new JSONObject();
+			for (int i = 1; i <= columnCount; i++) {
+				String columnName = metaData.getColumnLabel(i);
+				String value = resultSet.getString(columnName);
+				jsonObj.put(columnName, value);
+			}
+			array.put(jsonObj);
+		}
+
+		return array.toString();
+	}
+
+	public static void main(String[] args) {
+
+		Protocol p = new Protocol();
+		String str = p.createMessage("aaa", "bbb");
+		System.out.println(str);
+		String[] s = p.decodeMessage(str);
+		for (String ss : s) {
+
+			System.out.print(ss + " ");
+		}
+
+	}
+}

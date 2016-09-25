@@ -1,0 +1,98 @@
+package auction;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.Observable;
+
+import javax.swing.JTable;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import dependency.Protocol;
+
+public class BidListModel extends Observable {
+
+	Socket socket = null;
+	JTable table = null;
+	BidListTable tableModel = null;
+
+	public BidListModel(Socket socket, JTable table, BidListTable tableModel) {
+		this.socket = socket;
+		this.table = table;
+		this.tableModel = tableModel;
+	}
+
+	public void addItem() {
+		//tableModel.addRow("macbook", "long", "kobe", "" + 100, "" + 1000);
+		table.updateUI();
+	}
+
+	public void cleanItems() {
+		tableModel.removeRows(0, tableModel.getRowCount());
+		table.updateUI();
+	}
+
+	public void getData() {
+		int col = tableModel.getColumnCount();
+		int row = tableModel.getRowCount();
+		for (int i = 0; i < col; i++) {
+			System.out.print(tableModel.getColumnName(i) + "\t");
+		}
+		System.out.print("\r\n");
+		for (int i = 0; i < row; i++) {
+			for (int j = 0; j < col; j++) {
+				System.out.print(tableModel.getValueAt(i, j) + "\t");
+			}
+			System.out.print("\r\n");
+		}
+		System.out.println("------------------------------------");
+	}
+
+	public void refresh() {
+
+		try {
+			DataInputStream in = new DataInputStream(socket.getInputStream());
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+			String str = Protocol.createMessage("get-my-bidlist");
+
+			out.writeUTF(str);
+			out.flush();
+
+			String fromServer = in.readUTF();
+
+			System.out.println(fromServer);
+			JSONArray result = Protocol.StringToJSONArray(fromServer);
+
+			cleanItems();
+			for (int i = 0; i < result.length(); i++) {
+				JSONObject tmp = (JSONObject) result.get(i);
+				addItem(tmp);
+			}
+
+			table.updateUI();
+		}
+
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private void addItem(JSONObject tmp) {
+		String id = String.format("%06d", tmp.getInt("id"));
+		String seller = tmp.getString("seller");
+		String name = tmp.getString("name");
+		String time_left = tmp.getString("endtime");
+		String fixed_price = "";
+		if (tmp.has("price"))
+			fixed_price = "" + tmp.getDouble("price");
+		String current_price = "";
+		if (tmp.has("currentprice"))
+			current_price = "" + tmp.getDouble("currentprice");
+		tableModel.addRow(id,name, time_left, seller, current_price, fixed_price);
+	}
+}

@@ -1,0 +1,145 @@
+package auction;
+
+import java.awt.Color;
+import java.net.Socket;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+
+public class SellerTab extends JPanel implements Observer {
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	 
+    private JTable table = null;
+ 
+    private JScrollPane s_pan = null;
+    
+    SellerTable tableModel = null;
+    
+    
+	public SellerTab(Socket socket) {
+		
+		tableModel = new SellerTable();
+		table = new JTable(tableModel);
+		
+		SellerModel model = new SellerModel(socket, table, tableModel);
+        
+        
+        table.setBackground(Color.white);
+        setHorizontalAlignment(table);
+ 
+        s_pan = new JScrollPane(table);
+        
+        this.setLayout(null);
+        
+        //new auction
+        JLabel label_newAuction = new JLabel("new auction");
+        JLabel label_name = new JLabel("item:");
+        JTextArea text_name = new JTextArea();
+        JLabel label_time = new JLabel("time:");
+        String[] time = { "2 hrs", "8 hrs", "24 hrs" };
+        JComboBox<String> box_time = new JComboBox<String>(time);
+        JLabel label_startPrice = new JLabel("reserve price:");
+        JTextArea text_startPrice = new JTextArea();
+        JLabel label_fixedPrice = new JLabel("fixed price:");
+        JTextArea text_fixedPrice = new JTextArea();
+        JLabel label_discription = new JLabel("discription:");
+        JTextArea text_discription = new JTextArea();
+        JButton button_confirm = new JButton("confirm");
+        
+        label_newAuction.setBounds(30, 30, 100, 17);
+        label_name.setBounds(20, 60, 100, 17);
+        label_time.setBounds(20, 110,100,17);
+        label_startPrice.setBounds(20,160,100,17);
+        label_fixedPrice.setBounds(20,210,100,17);
+        label_discription.setBounds(20,260,100,17);
+        
+        text_name.setBounds(20, 80, 150, 17);
+        box_time.setBounds(40, 130, 110, 17);
+        text_startPrice.setBounds(20, 180, 150, 17);
+        text_fixedPrice.setBounds(20, 230, 150, 17);
+        text_discription.setBounds(20, 280, 150, 190);
+        button_confirm.setBounds(50,480,80,31);
+        
+        text_name.setBorder(BorderFactory.createLineBorder(Color.black,1));
+        //box_time.setBorder(BorderFactory.createLineBorder(Color.black,1));
+        text_startPrice.setBorder(BorderFactory.createLineBorder(Color.black,1));
+        text_fixedPrice.setBorder(BorderFactory.createLineBorder(Color.black,1));
+        text_discription.setBorder(BorderFactory.createLineBorder(Color.black,1));
+        text_discription.setLineWrap(true);
+        
+        add(label_newAuction);
+        add(label_name);
+        add(text_name);
+        add(label_time);
+        add(box_time);
+        add(label_startPrice);
+        add(text_startPrice);
+        add(label_fixedPrice);
+        add(text_fixedPrice);
+        add(label_discription);
+        add(text_discription);
+        add(button_confirm);
+        button_confirm.addActionListener(
+        		ae -> {model.publishItem(text_name.getText(),
+        					             box_time.getSelectedIndex(),
+        					             text_startPrice.getText(),
+        					             text_fixedPrice.getText());});
+        
+        //separator
+        JSeparator separator = new JSeparator(JSeparator.VERTICAL);
+        separator.setBounds(190, 20, 10, 500);
+        add(separator);
+        
+        //Items
+        JLabel label_yourItems = new JLabel("your items");
+        JButton button_close = new JButton("close");
+        JButton button_refresh = new JButton("refresh");
+        label_yourItems.setBounds(210, 30, 100, 17);
+        button_close.setBounds(690, 480, 80, 31);
+        button_close.addActionListener(ae -> {model.close(table.getValueAt(table.getSelectedRow(), 0).toString());});
+        button_refresh.setBounds(610, 480, 80, 31);
+        button_refresh.addActionListener(ae -> {model.getMyItems();});
+        add(label_yourItems);
+        add(button_close);
+        add(button_refresh);
+        
+        add(s_pan);
+        s_pan.setBounds(210, 55, 560, 420);
+		
+		//add content
+        model.getMyItems();
+	}
+	
+	private void setHorizontalAlignment(JTable table) {
+		DefaultTableCellRenderer tableCellRenderer = new DefaultTableCellRenderer();
+		tableCellRenderer.setHorizontalAlignment(JLabel.LEFT);
+		for(int i = 0; i< table.getColumnCount();i++)  
+        {  
+            TableColumn col = table.getColumn(table.getColumnName(i));  
+            col.setCellRenderer(tableCellRenderer);  
+        }
+	}
+	
+	@Override
+	public void update(Observable o, Object arg) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

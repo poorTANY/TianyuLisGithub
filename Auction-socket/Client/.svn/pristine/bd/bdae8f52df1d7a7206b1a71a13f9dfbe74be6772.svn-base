@@ -1,0 +1,78 @@
+package customComponents;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumnModel;
+
+public class CustomHeader extends DefaultTableCellRenderer {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private CustomLabel label;
+	private ImageIcon icon;
+	private Image img; 
+
+	public CustomHeader(){
+		try{
+			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+			InputStream inputStream = classLoader.getResourceAsStream("lightWoodTexture.jpg");
+			img = ImageIO.read(inputStream);
+			
+        } catch(IOException e) {
+            System.out.println(e.toString());
+        }
+		
+		//icon = new ImageIcon(getClass().getResource("src/resources/lightWoodTexture.jpg"));
+	}
+	
+
+	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+			boolean hasFocus, int row, int column) {
+		Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+		
+		//System.out.println((String) value);
+		label = new CustomLabel((String) value);
+		//table.getModel().getValueAt(row, column);
+		TableColumnModel tcm = table.getColumnModel();
+		int height2 = table.getRowHeight();
+		
+		tcm.getColumn(column).getWidth();
+		Dimension dimension = c.getPreferredSize();
+		//int width = dimension.width;
+		int height = dimension.height;
+		/*label.setPreferredSize(c.getPreferredSize());
+		label.setMaximumSize(c.getPreferredSize());
+		label.setMinimumSize(c.getPreferredSize());*/
+		Image dimg = img.getScaledInstance(tcm.getColumn(column).getWidth(), height2,
+		        Image.SCALE_SMOOTH);
+		label.setHorizontalTextPosition(JLabel.CENTER);
+		icon = new ImageIcon(dimg);
+		//c.
+		
+		Dimension dimension2 = new Dimension(tcm.getColumn(column).getPreferredWidth(), height2);
+		label.setIcon(icon);
+		label.setPreferredSize(dimension2);
+		label.setMaximumSize(dimension2);
+		label.setMinimumSize(dimension2);
+		//setIconTextGap(-tcm.getColumn(column).getPreferredWidth());
+		//setIconTextGap(0);
+		//label.setText((String) value);
+		//setText((String) value);
+		//setIcon(icon);
+		return label;
+	}
+}

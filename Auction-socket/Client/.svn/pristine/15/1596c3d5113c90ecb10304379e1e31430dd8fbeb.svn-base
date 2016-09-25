@@ -1,0 +1,74 @@
+package auction;
+
+import java.awt.Color;
+import java.net.Socket;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
+
+public class BidListTab extends JPanel implements Observer {
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	 
+    private JTable table = null;
+ 
+    private JScrollPane s_pan = null;
+    
+    private JButton button_refresh = null;
+    
+    BidListTable tableModel = null;
+    
+    
+	public BidListTab(Socket socket) {
+		
+		tableModel = new BidListTable();
+		table = new JTable(tableModel);
+		
+		BidListModel model = new BidListModel(socket, table, tableModel);
+        
+        table.setBackground(Color.white);
+        setHorizontalAlignment(table);
+        //TableColumnModel tcm = table.getColumnModel();
+ 
+        s_pan = new JScrollPane(table);
+        
+        this.setLayout(null);
+        
+        button_refresh = new JButton("refresh");
+        button_refresh.setBounds(680, 460, 80, 31);
+        button_refresh.addActionListener(ae -> {model.refresh();});
+        
+        add(s_pan);
+        s_pan.setBounds(10, 50, 760, 400);
+		
+		//add content
+        add(button_refresh);
+	}
+	
+	private void setHorizontalAlignment(JTable table) {
+		DefaultTableCellRenderer tableCellRenderer = new DefaultTableCellRenderer();
+		tableCellRenderer.setHorizontalAlignment(JLabel.LEFT);
+		for(int i = 0; i< table.getColumnCount();i++)  
+        {  
+            TableColumn col = table.getColumn(table.getColumnName(i));  
+            col.setCellRenderer(tableCellRenderer);  
+        }
+	}
+	
+	@Override
+	public void update(Observable o, Object arg) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

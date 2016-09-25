@@ -1,0 +1,76 @@
+package dependency;
+
+import org.json.JSONObject;
+
+public class Protocol {
+
+	/**
+	 * when creating message, the first String is the type of the message now I
+	 * have defined some basic cases
+	 * 
+	 * createMessage("login", "username", "password") for check the username and
+	 * password when login
+	 * 
+	 * createMessage("bool", "true") means this message is a boolean value
+	 * 
+	 * We should define more cases in the future and now it is just a very
+	 * simple protocol, but it works
+	 * 
+	 * We could modify it in the future
+	 * 
+	 * 
+	 * @param args
+	 * @return
+	 */
+	public String createMessage(String... args) {
+		String result = "";
+		for (String str : args) {
+			if (result != "")
+				result = result + "---";
+			result = result + str;
+		}
+
+		return result;
+	}
+
+	public String[] decodeMessage(String str) {
+
+		if (str == null || str.equals("")) {
+			return new String[0];
+		}
+		String[] messages = str.split("---");
+		for (int i = 0; i < messages.length; i++) {
+			messages[i] = messages[i];
+		}
+		if (messages.length == 1 && messages[0].equals("")) {
+			return new String[0];
+		}
+		return messages;
+	}
+
+	public static JSONObject StringToJSONObject(String s) {
+		return new JSONObject(s);
+	}
+	// obtain ways
+	// JSONObject result = jsonObj.getJSONObject(primaty_key);
+	// result.getString(attribute);result.getInt(attribute);
+	/*
+	 * jsonObj = new JSONObject(s); JSONArray
+	 * JSONArray jsonarr=jsonObj.getJSONArray(primaty_key); 
+	 * for(int i=0;i<jsonarr.length();i++) 
+	 * { jsonarr.getString(i); }
+	 */
+
+	public static void main(String[] args) {
+
+		Protocol p = new Protocol();
+		String str = p.createMessage("aaa", "bbb");
+		System.out.println(str);
+		String[] s = p.decodeMessage(str);
+		for (String ss : s) {
+
+			System.out.print(ss + " ");
+		}
+
+	}
+}

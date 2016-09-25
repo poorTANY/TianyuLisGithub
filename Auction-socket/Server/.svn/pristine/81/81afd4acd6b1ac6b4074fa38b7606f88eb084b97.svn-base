@@ -1,0 +1,336 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.net.Socket;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
+
+import dependency.*;
+
+public class ClientThread implements Runnable {
+
+	private Socket socket;
+	private long serialID;
+	private int loginTryNum = 0;
+	private boolean accepted = false;
+	private Map<Item, User> market;
+	private User user;
+	private Server server;
+	private Room room;
+
+	// private Protocol protocol = new Protocol();
+
+	private Database db = new Database();
+
+	DataInputStream in;
+	DataOutputStream out;
+
+	public ClientThread(Socket socket, long serialID, Server server) {
+		this.socket = socket;
+		this.serialID = serialID;
+		this.server = server;
+		// this.market = market;
+
+		db.open();
+	}
+
+	@Override
+	public void run() {
+		try {
+			in = new DataInputStream(socket.getInputStream());
+			out = new DataOutputStream(socket.getOutputStream());
+
+			String tmp = in.readUTF();
+
+			System.out.println(tmp);
+
+			if (tmp.equals("connect to Miami")) {
+
+				out.writeUTF("Welcome! - Miami");
+				out.writeLong(serialID);
+				out.flush();
+
+				System.out.printf("ID:0x%04x succeed!\n", serialID);
+
+			}
+
+			else {
+				out.writeUTF("access deined!");
+				System.out.printf("ID:0x%04x failed!\n", serialID);
+			}
+
+			// out.flush();
+			// out.close();
+
+			// test the protocol
+
+			// tmp = in.readUTF();
+
+			pending();
+
+			room.setCurrentPlayers(room.getCurrentPlayers() - 1);
+			System.out.printf("ID:0x%04x disconnected\n", serialID);
+
+		} catch (IOException e) {
+
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private void pending() throws SQLException {
+
+		String tmp;
+
+		while (!socket.isClosed()) {
+
+			try {
+				socket.sendUrgentData(0xFF);
+			} catch (Exception e) {
+				System.out.println("Connection Error!");
+				break;
+			}
+
+			try {
+				tmp = in.readUTF();
+			} catch (IOException e) {
+				System.out.println("Message Error!");
+				break;
+			}
+
+			String[] fromClient = Protocol.decodeMessage(tmp);
+
+			if (fromClient[0].equals("login")) {
+
+				System.out.println("receive login message and send back to client");
+
+				Boolean result = db.checkLogin(fromClient[1], fromClient[2]);
+
+				try {
+					out.writeUTF(Protocol.createMessage("bool", result.toString()));
+					out.flush();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+				if (result) {
+
+					user = db.getUser(fromClient[1]);
+
+				}
+
+				// out.close();
+			}
+
+			// check register
+			if (fromClient[0].equals("register")) {
+
+				System.out.println("receive register message from client");
+
+				// checkUsername method check if the username is already in
+				// the database
+				// if so, means the register could not use this username
+				Boolean resulttmp = db.checkUsername(fromClient[1]);
+				Boolean result = !resulttmp;
+				System.out.println(result);
+				try {
+					out.writeUTF(Protocol.createMessage("bool", result.toString()));
+					out.flush();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				// out.close();
+			}
+
+			// create new user
+			if (fromClient[0].equals("create")) {
+
+				System.out.println("Create new user");
+
+				db.insert(fromClient[1], fromClient[2]);
+			}
+
+			// add item
+			if (fromClient[0].equals("additem")) {
+
+				System.out.println("add new item");
+
+				// this.market.put(new
+				// Item(fromClient[1],Double.parseDouble(fromClient[2])),user
+				// );
+				// db.addItem(name, owner, seller, price, duration);
+			}
+
+			if (fromClient[0].equals("roomCheck")) {
+
+				ArrayList<Room> currentRooms = new ArrayList<Room>(server.getRooms());
+				ArrayList<String> message = new ArrayList<String>();
+
+				for(int i = 0; i < currentRooms.size(); i++){
+					message.add(currentRooms.get(i).getName());
+					message.add(currentRooms.get(i).getAvailability());
+					message.add((Integer.toString(currentRooms.get(i).getCurrentPlayers()) + "/" + currentRooms.get(i).getNumberOfPlayers()));
+				}
+
+				message.add(0, "roomCheck");
+				String messagesToSend[] = new String[message.size()];
+				messagesToSend = message.toArray(messagesToSend);
+				String str = Protocol.createMessage(messagesToSend);
+
+				try {
+					out.writeUTF(str);
+					out.flush();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+
+			if (fromClient[0].equals("create-room")) {
+				String str = "";
+				if (!server.getRooms().contains(new Room(fromClient[1], "", ""))) {
+					server.addRoom(fromClient[1], fromClient[2], fromClient[3]);
+					str = Protocol.createMessage("create-room", "true");
+				} else {
+					str = Protocol.createMessage("create-room", "false");
+				}
+
+				try {
+					out.writeUTF(str);
+					out.flush();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+			}
+
+			if(fromClient[0].equals("select-room")){
+				String str = "";
+				if(server.getRooms().contains(new Room(fromClient[1], "", ""))){
+					int position = server.getRooms().indexOf(new Room(fromClient[1], "", ""));
+					Room room = server.getRooms().get(position);
+					if(room.getAvailability().equals("Open")){
+						if(room.getCurrentPlayers() < Integer.parseInt(room.getNumberOfPlayers())){
+							this.room = room;
+							this.room.setCurrentPlayers(this.room.getCurrentPlayers() + 1);
+							str = Protocol.createMessage("select-room", "true");
+						}
+						else{
+							str = Protocol.createMessage("select-room", "false", "Max number of players reached");
+						}	
+					}
+					else{
+						str = Protocol.createMessage("select-room", "false", "Room is not open");
+					}
+				}
+				else{
+					str = Protocol.createMessage("select-room", "false", "Room no longer exists"); 
+				}
+				try {
+					out.writeUTF(str);
+					out.flush();
+				} catch (IOException e) {
+
+					e.printStackTrace();
+				}
+
+			}
+
+			if(fromClient[0].equals("search")){
+
+				String str = "";
+				String query;
+				String[] searchWords = fromClient[1].split(" "); 
+				if (searchWords.length == 0){
+					query = "SELECT * FROM items";
+				}
+				else if (searchWords.length == 1){
+					query = "SELECT * FROM items WHERE name LIKE '%" + searchWords[0] + "%'";
+				}
+				else {
+					query = "SELECT * FROM items WHERE name LIKE '%" + searchWords[0] + "%'";
+
+					for (int i = 1; i < searchWords.length; i++){
+
+						query.concat("OR name LIKE '%" + searchWords[i] + "%'");
+
+					}
+				}
+
+				ResultSet rs = db.runQuery(query);
+
+				while (rs.next()) {
+					String name = rs.getString(0);
+					String time_left = rs.getString(1);
+					String seller = rs.getString(2);
+					String current_price = Integer.toString(rs.getInt(3));
+					String fix_price = Integer.toString(rs.getInt(4)); 
+
+					str = Protocol.createMessage(name, time_left, seller, current_price, fix_price);
+					try {
+						out.writeUTF(str);
+						out.flush();
+					} catch (IOException e) {
+
+						e.printStackTrace();
+					}
+				}
+
+				str = Protocol.createMessage("table complete.");
+				try {
+					out.writeUTF(str);
+					out.flush();
+				} catch (IOException e) {
+
+					e.printStackTrace();
+				}
+			}
+		}
+
+
+
+	}
+
+	private void release() {
+		try {
+			socket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void loginCheck() {
+
+		loginTryNum++;
+		if (loginTryNum > 3)
+			deny();
+
+		try {
+			out.writeUTF("username and password please - Miami");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void deny() {
+		try {
+			out.writeUTF("access denied - Miami");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void lexicalError() {
+		try {
+			out.writeUTF("lexical analysis Error!");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+}

@@ -1,0 +1,228 @@
+package logIn;
+
+
+
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+<<<<<<< .mine
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+=======
+
+import customComponents.CustomButton;
+import customComponents.CustomLabel;
+import customComponents.CustomPanel;
+import customComponents.CustomPasswordField;
+import customComponents.CustomTextField;
+>>>>>>> .r164
+
+
+//To do: Prevent Enter and Tab changing textfield sizes
+
+
+public class logInView extends JFrame implements Observer{
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+<<<<<<< .mine
+	private JTextField username = new JTextField("username",30);
+	private JLabel usernameLabel = new JLabel("Username");
+	private JPasswordField password = new JPasswordField("password",30);
+	private JLabel passwordLabel = new JLabel("Password");
+	private JButton buttonLogin = new JButton("login");
+	private JButton buttonRegister = new JButton("register");
+=======
+	private CustomTextField username = new CustomTextField("username",10);
+	private CustomLabel usernameLabel = new CustomLabel("Username");
+	private CustomPasswordField password = new CustomPasswordField("password",10);
+	private CustomLabel passwordLabel = new CustomLabel("Password");
+	private CustomButton buttonLogin = new CustomButton("Log in");
+	private CustomButton buttonRegister = new CustomButton("Register");
+	
+	private JLabel picLabel = new JLabel(new ImageIcon("src/image/login.jpg"));
+	
+	private CustomPanel pic = new CustomPanel();
+	private CustomPanel mid = new CustomPanel();
+	private CustomPanel bottom = new CustomPanel();
+	
+	private CustomPanel userPanel = new CustomPanel();
+	private CustomPanel passPanel = new CustomPanel();
+	
+	private CustomPanel mainPanel = new CustomPanel();
+>>>>>>> .r164
+	
+	
+	
+	@SuppressWarnings("deprecation")
+	public logInView(logIn model, long serialID){
+		super(String.format("login   - ID:0x%04x", serialID));
+<<<<<<< .mine
+=======
+		this.model = model;
+		
+		
+		userPanel.add(usernameLabel);
+		userPanel.add(username);
+		
+		passPanel.add(passwordLabel);
+		passPanel.add(password);
+		
+		pic.add(picLabel);
+		
+		mid.setLayout(new GridLayout(2,1));
+		mid.add(userPanel);
+		mid.add(passPanel);
+		//mid.setBackground(Color.white);
+		
+		bottom.add(buttonLogin);
+		bottom.add(buttonRegister);
+		
+		mainPanel.setLayout(new BorderLayout());
+		
+		mainPanel.add(pic, BorderLayout.NORTH);
+		mainPanel.add(mid, BorderLayout.CENTER);
+		mainPanel.add(bottom, BorderLayout.SOUTH);
+>>>>>>> .r164
+		
+		//Text areas
+		//username.setBorder(BorderFactory.createLineBorder(Color.black,1));
+		//password.setBorder(BorderFactory.createLineBorder(Color.black,1));
+		
+		
+		username.addFocusListener(new UsernameFocusListener());
+		password.addFocusListener(new PasswordFocusListener());
+		
+		/*
+		buttonSettings(buttonLogin);
+		buttonSettings(buttonRegister);
+		//Panels
+		JPanel bigPanel = new JPanel();
+		
+		//Add to panel
+		bigPanel.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.insets = new Insets(10,10,10,10);
+		
+		c.gridx = 0;
+		c.gridy = 1;
+		bigPanel.add(usernameLabel,c);
+		
+		c.gridx = 0;
+		c.gridy = 2;
+		bigPanel.add(username,c);
+		
+		c.gridx = 0;
+		c.gridy = 3;
+		bigPanel.add(passwordLabel,c);
+		
+		c.gridx = 0;
+		c.gridy = 4;
+		bigPanel.add(password,c);
+		
+		c.gridx = 0;
+		c.gridy = 5;
+		bigPanel.add(buttonLogin,c);
+		
+		c.gridx = 0;
+		c.gridy = 6;
+		bigPanel.add(buttonRegister,c);
+		
+		*/
+		//Add listeners
+		buttonLogin.addActionListener(ae -> {try {
+			
+			this.dispose();
+			
+			model.login(username.getText(), password.getText());
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}});
+		buttonRegister.addActionListener(ae -> {this.dispose(); model.register();});
+		
+		//Adding to Frame
+		JFrame.setDefaultLookAndFeelDecorated(true);
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setContentPane(mainPanel);
+		this.pack();
+		this.setVisible(true);
+		this.setSize(450,300);
+		this.setResizable(false);
+		this.setMinimumSize(this.getPreferredSize());
+<<<<<<< .mine
+=======
+		//SwingUtilities.updateComponentTreeUI(this);
+>>>>>>> .r164
+		model.addObserver(this);
+		
+	}
+	
+	
+	
+	private class UsernameFocusListener implements FocusListener{
+	      public void focusGained(FocusEvent e) {
+	    	  if(username.getText().equals("username")){
+	    	  	username.setText("");
+	    	  }
+	      }
+
+		@Override
+		public void focusLost(FocusEvent e) {
+			if(username.getText().equals("")){
+				username.setText("username");
+			}
+		}
+	}
+	
+	private class PasswordFocusListener implements FocusListener{
+	      @SuppressWarnings("deprecation")
+		public void focusGained(FocusEvent e) {
+	    	  if(password.getText().equals("password")){
+	    		  password.setText("");
+	    	  }
+	      }
+
+		@SuppressWarnings("deprecation")
+		@Override
+		public void focusLost(FocusEvent e) {
+			if(password.getText().equals("")){
+				password.setText("password");
+			}
+		}
+	}
+	
+	@Override
+	public void update(Observable o, Object arg) {
+		
+	}
+	
+<<<<<<< .mine
+=======
+	/*public void setLAF() throws MalformedURLException, IOException{
+		SynthLookAndFeel laf = new SynthLookAndFeel();
+		try {
+			laf.load(logInView.class.getResourceAsStream("AuctionLAF.xml"), logInView.class);
+			try {
+				UIManager.setLookAndFeel(laf);
+			} catch (UnsupportedLookAndFeelException e) {
+				e.printStackTrace();
+			}
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+	}*/
+>>>>>>> .r164
+	
+}

@@ -1,0 +1,72 @@
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.KeyEvent;
+import java.sql.SQLException;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+
+import dependency.*;
+
+public class ServerView extends JFrame implements Observer{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private Server model;
+	
+
+	private JFrame frame;
+
+	public ServerView(Server model) throws SQLException{
+
+		this.model = model;
+
+		frame = new JFrame("Server");
+		JTabbedPane serverTabs = new JTabbedPane();
+
+		//first tab
+		JPanel userDatabasePanel = new UserDatabaseTab(model);
+		serverTabs.addTab("User Database", null, userDatabasePanel, "View/Edit the User Database");
+		serverTabs.setMnemonicAt(0, KeyEvent.VK_0);
+
+		//second tab
+		JPanel auctionRoomsPanel = new AuctionRoomsTab(model);
+		serverTabs.addTab("Auction Rooms", null , auctionRoomsPanel, "View/Edit Auction Rooms");
+		serverTabs.setMnemonicAt(1, KeyEvent.VK_1);
+
+		//third tab
+		JPanel administratorsPanel = new AdministratorsTab(model);
+		serverTabs.addTab("Administrators", null, administratorsPanel, "Administrator Settings");
+		serverTabs.setMnemonicAt(2, KeyEvent.VK_2);
+
+		//add
+		frame.add(serverTabs); 
+		serverTabs.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+		serverTabs.setTabPlacement(JTabbedPane.TOP);
+
+		//Adding to Frame
+		JFrame.setDefaultLookAndFeelDecorated(true);
+		frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
+		frame.setContentPane(serverTabs);
+		frame.pack();
+		frame.setVisible(true);
+		frame.setSize(800,600);
+		frame.setMinimumSize(frame.getPreferredSize());
+		model.addObserver(this);
+	}
+
+	@Override
+	public void update(Observable arg0, Object arg1) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

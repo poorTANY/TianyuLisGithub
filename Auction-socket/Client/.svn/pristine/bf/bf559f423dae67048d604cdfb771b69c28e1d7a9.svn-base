@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<synth>
+	<style id="logIn">
+		<state>
+			<imagePainter method="buttonBackground" path="images/button.png"
+				sourceInsets="10 10 10 10" />
+		</state>
+	</style>
+	<bind style="logIn" type="region" key="Button" />
+
+	<style id="textfield">
+		<state>
+			
+		</state>
+		<imagePainter method="textFieldBorder" path="images/button.png"
+				sourceInsets="10 10 10 10" paintCenter = "true" />
+	</style>
+	<bind style="textfield" type="region" key="Textfield" />
+</synth>

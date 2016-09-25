@@ -1,0 +1,27 @@
+package customComponents;
+
+import java.awt.Color;
+import java.awt.Font;
+
+import javax.swing.BorderFactory;
+import javax.swing.JPasswordField;
+
+public class CustomPasswordField extends JPasswordField{
+	
+	public CustomPasswordField(String a, int b){
+		super(a, b);
+		setBorder(BorderFactory.createLineBorder(Color.black,1));
+		setBackground(Color.WHITE);
+		setFont(new Font("Apple Casual", 1, 12));
+		setForeground(Color.BLACK);
+	}
+	
+	public CustomPasswordField(){
+		
+		setBorder(BorderFactory.createLineBorder(Color.black,1));
+		setBackground(Color.WHITE);
+		setFont(new Font("Apple Casual", 1, 12));
+		setForeground(Color.BLACK);
+	}
+
+}

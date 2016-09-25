@@ -1,0 +1,16 @@
+import java.sql.SQLException;
+
+public class Main {
+	public static void main(String[] a) throws SQLException {
+		String host;
+		String port;
+		if (a.length == 0) {
+			host = "localhost";
+			port = "8000";
+		} else {
+			host = a[0];
+			port = a[1];
+		}
+		new Server(host, port);
+	}
+}

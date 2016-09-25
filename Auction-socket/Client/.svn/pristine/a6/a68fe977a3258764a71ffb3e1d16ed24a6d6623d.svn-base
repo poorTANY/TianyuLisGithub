@@ -1,0 +1,70 @@
+package auction;
+
+import java.awt.GridLayout;
+import java.awt.event.KeyEvent;
+import java.net.Socket;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+
+import customComponents.CustomPanel;
+import customComponents.CustomTabbedPane;
+
+public class AuctionView extends CustomPanel implements Observer{
+    
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	Socket socket = null;
+	JFrame frame = null;
+	
+	public AuctionView(Socket socket, JFrame frame) {
+		super(new GridLayout(1,1));
+		
+		this.socket = socket;
+		this.frame = frame;
+		frame.setSize(900, 600);
+		
+    	frame.setTitle("Auction Screen");
+        CustomTabbedPane tp = new CustomTabbedPane();
+       
+        //first tab
+        CustomPanel panel_market = new MarketTab(socket);
+        tp.addTab("Buy",null,panel_market,"Buy");
+        //hot key
+        tp.setMnemonicAt(0, KeyEvent.VK_0);
+        
+        
+       
+       
+        //second tab
+        CustomPanel panel_seller = new SellerTab(socket);
+        tp.addTab("Sell",null ,panel_seller,"Sell");
+        tp.setMnemonicAt(1, KeyEvent.VK_1);
+  
+        //third tab
+        CustomPanel panel_list = new BidListTab(socket);
+        tp.addTab("Current bids", null, panel_list,"Current bids");
+        tp.setMnemonicAt(2, KeyEvent.VK_2);
+  
+        //add
+        add(tp);
+        
+        tp.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+        tp.setTabPlacement(JTabbedPane.TOP);
+        frame.add(this);
+        frame.setContentPane(this);
+        frame.setVisible(true);
+    }
+
+	@Override
+	public void update(Observable o, Object arg) {
+		// TODO Auto-generated method stub
+		
+	}
+}

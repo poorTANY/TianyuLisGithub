@@ -1,0 +1,138 @@
+package logIn;
+
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.Observable;
+
+import dependency.User;
+
+import dependency.Protocol;
+
+public class RegisterModel extends Observable {
+	
+	private User user;
+	
+	private Protocol protocol;
+	
+	long serialID;
+	Socket socket;
+	
+	public RegisterModel(Socket socket, long serailID){
+		
+		this.serialID = serialID;
+		this.socket = socket;
+		this.protocol = new Protocol();
+	}
+	
+	/**
+	 * simple version of sending the information of user to the server
+	 * in this version, only username and password are send
+	 * more information will be added in the future according to what
+	 * information we will have for a user profile
+	 * 
+	 * @param username
+	 * @param password
+	 * @param password2
+	 */
+	public boolean sendToServer(String username, String password, String password2){
+		
+		/*
+		
+		if(checkUsername(username) && checkPassword(password,password2)){
+			
+			this.user = new User(username, password);
+			
+			try {
+				
+				DataOutputStream toServer = new DataOutputStream(socket.getOutputStream());
+				DataInputStream fromServer = new DataInputStream(socket.getInputStream());
+				
+				String str = protocol.createMessage("register", username, password);
+				
+				toServer.writeUTF(str);
+				
+				str = fromServer.readUTF();
+				
+				String[] result = protocol.decodeMessage(str);
+				
+				if(result[0].equals("bool") && result[1].equals("true")){
+					
+					return true;
+				}
+				
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+			
+			return false;	*/
+		
+		return true;
+		
+	}
+	
+	public void create(String username, String passwd){
+		
+		try {
+			
+			DataOutputStream toServer = new DataOutputStream(socket.getOutputStream());
+			DataInputStream fromServer = new DataInputStream(socket.getInputStream());
+			
+			String str = protocol.createMessage("create", username, passwd);
+			
+			toServer.writeUTF(str);
+			
+			
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	
+	}
+	
+	/**
+	 * Username could only be characters or numbers
+	 * @param username
+	 * @return
+	 */
+	public boolean checkUsername(String username){
+		
+		//should also check if the username is in the database or not
+		
+		return username.matches("^[A-Za-z0-9]+$");
+	}
+	
+	/**
+	 * Password should only be characters or numbers
+	 * 
+	 * @param password
+	 * @param password2
+	 * @return
+	 */
+	public boolean checkPassword(String password, String password2){
+	
+		return password.matches("^[A-Za-z0-9]+$") && password.equals(password2) ;
+	}
+	
+	/**
+	 * back to login page
+	 */
+	public void back(){
+		
+		//RegisterView rv = new RegisterView(this);
+		logIn login = new logIn(socket, serialID);
+		logInView lv = new logInView(login, serialID);
+	}
+
+
+
+
+}
+

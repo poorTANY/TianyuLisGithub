@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<synth>
+	<style id="logIn">
+		<state>
+			<imagePainter method="buttonBackground" path="images/Untitled.png"
+				sourceInsets="0 0 0 0" />
+		</state>
+	</style>
+	<bind style="logIn" type="region" key=".*" />
+</synth>

@@ -1,0 +1,51 @@
+package dependency;
+
+public class Room {
+	
+	private String name;
+	private String availability;
+	private String numberOfPlayers;
+	private int currentPlayers = 0;
+	
+	public Room(String name, String availability, String numberOfPlayers){
+		this.name = name;
+		this.availability = availability;
+		this.numberOfPlayers = numberOfPlayers;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		
+		if(obj instanceof Room){
+			Room toCompare = (Room)obj;
+			return this.name.equals(toCompare.name);
+		}
+		return false;
+		
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public String getAvailability() {
+		return availability;
+	}
+
+	public String getNumberOfPlayers() {
+		return numberOfPlayers;
+	}
+
+	public int getCurrentPlayers() {
+		return currentPlayers;
+	}
+
+	public void setCurrentPlayers(int currentPlayers) {
+		this.currentPlayers = currentPlayers;
+	}
+
+	
+
+	
+	
+}

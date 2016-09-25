@@ -1,0 +1,98 @@
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import java.util.Observable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.swing.JFrame;
+import javax.swing.JTable;
+
+import dependency.Database;
+
+import dependency.Item;
+import dependency.User;
+
+public class Server extends Observable{
+
+	final int port = 8000;
+	private ServerSocket serverSocket;
+
+	final int maxThreadNum = 200;
+	ExecutorService tasks = Executors.newFixedThreadPool(maxThreadNum);
+
+	long serialID;
+	private JFrame view;
+
+	
+	private Map<Item, User> market;
+	private ArrayList<String> rooms = new ArrayList<String>();
+	
+
+
+	protected Database database = new Database();
+
+	public Server() throws SQLException {
+
+		//Rooms for testing
+		rooms.add("Room 1");
+		rooms.add("Open");
+		rooms.add("0");
+		rooms.add("Room 2");
+		rooms.add("Closed");
+		rooms.add("0");
+		try {
+			serverSocket = new ServerSocket(port);
+			System.out.println("Miami Server started...");
+
+			serialID = 1L;
+
+			database.open();
+			market = new ConcurrentHashMap<Item, User>();
+			
+			//view = new ServerView(this);
+
+			// create thread for each connection
+			while(true) {
+				Socket socket = serverSocket.accept();
+				ClientThread ct = new ClientThread(socket, serialID++, this);
+				new Thread(ct).start();
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public ResultSet getUserDatabase() throws SQLException{
+		ResultSet rs = database.runQuery("SELECT * FROM nameandpasswd");
+		
+		setChanged();
+		notifyObservers(rs);
+		
+		return rs;
+	}
+	
+	public synchronized void addRoom(String name, String availability, String numberOfPlayers){
+		rooms.add(name);
+		rooms.add(availability);
+		rooms.add(numberOfPlayers);
+	}
+
+	/**
+	 * @return the rooms
+	 */
+	public synchronized ArrayList<String> getRooms() {
+		return rooms;
+	}
+	
+
+}

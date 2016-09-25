@@ -1,0 +1,65 @@
+package auction;
+
+import java.awt.GridLayout;
+import java.awt.event.KeyEvent;
+import java.net.Socket;
+import java.util.Observable;
+import java.util.Observer;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+
+public class AuctionView extends JPanel implements Observer{
+    
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	Socket socket = null;
+	JFrame frame = null;
+	
+	public AuctionView(Socket socket, JFrame frame) {
+		super(new GridLayout(1,1));
+		
+		this.socket = socket;
+		this.frame = frame;
+		
+    	frame.setTitle("Auction game");
+        JTabbedPane tp = new JTabbedPane();
+       
+        //first tab
+        JPanel panel_market = new MarketTab(socket);
+        tp.addTab("market",null,panel_market,"market");
+        //hot key
+        tp.setMnemonicAt(0, KeyEvent.VK_0);
+        
+        
+       
+       
+        //second tab
+        JPanel panel_seller = new SellerTab(socket);
+        tp.addTab("sell",null ,panel_seller,"sell");
+        tp.setMnemonicAt(1, KeyEvent.VK_1);
+  
+        //thrid tab
+        JPanel panel_list = new BidListTab(socket);
+        tp.addTab("bid list", null, panel_list,"bid list");
+        tp.setMnemonicAt(2, KeyEvent.VK_2);
+  
+        //add
+        add(tp);
+        
+        tp.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+        tp.setTabPlacement(JTabbedPane.TOP);
+        frame.add(this);
+        frame.setContentPane(this);
+        frame.setVisible(true);
+    }
+
+	@Override
+	public void update(Observable o, Object arg) {
+		// TODO Auto-generated method stub
+		
+	}
+}

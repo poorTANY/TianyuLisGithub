@@ -1,0 +1,155 @@
+package logIn;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+
+import customComponents.CustomButton;
+import customComponents.CustomLabel;
+import customComponents.CustomPanel;
+import customComponents.CustomPasswordField;
+import customComponents.CustomTextField;
+
+public class logInView extends JFrame implements Observer {
+
+	/**@author jep537 @author jci574
+	 * logInView creates a JFrame which contains all the necessary features for the user to log in. The class
+	 * uses custom components created for the GUI and focusListeners for the text boxes.
+	 */
+	private static final long serialVersionUID = 1L;
+	// private logIn model;
+	private CustomTextField username = new CustomTextField("username", 10);
+	private CustomLabel usernameLabel = new CustomLabel("Username");
+	private CustomPasswordField password = new CustomPasswordField("password", 10);
+	private CustomLabel passwordLabel = new CustomLabel("Password");
+	private CustomButton buttonLogin = new CustomButton("Log in", 12);
+	private CustomButton buttonRegister = new CustomButton("Register", 12);
+
+	private JLabel picLabel = new JLabel(new ImageIcon("src/image/login.jpg"));
+
+	private CustomPanel pic = new CustomPanel();
+	private CustomPanel mid = new CustomPanel();
+	private CustomPanel bottom = new CustomPanel();
+
+	private CustomPanel userPanel = new CustomPanel();
+	private CustomPanel passPanel = new CustomPanel();
+
+	private CustomPanel mainPanel = new CustomPanel();
+
+	/**
+	 * logInView constructor which takes in a logIn model and a serialID. This constructor then sets up the 
+	 * GUI and all functions associated with it.
+	 * @param model logIn model
+	 * @param serialID
+	 */
+	@SuppressWarnings("deprecation")
+	public logInView(logIn model, long serialID) {
+		super(String.format("login   - ID:0x%04x", serialID));
+		// this.model = model;
+
+		buttonLogin.setPreferredSize(new Dimension(100, 40));
+		buttonRegister.setPreferredSize(new Dimension(100, 40));
+
+		userPanel.add(usernameLabel);
+		userPanel.add(username);
+
+		passPanel.add(passwordLabel);
+		passPanel.add(password);
+
+		pic.add(picLabel);
+
+		mid.setLayout(new GridLayout(2, 1));
+		mid.add(userPanel);
+		mid.add(passPanel);
+		// mid.setBackground(Color.white);
+
+		bottom.add(buttonLogin);
+		bottom.add(buttonRegister);
+
+		mainPanel.setLayout(new BorderLayout());
+
+		mainPanel.add(pic, BorderLayout.NORTH);
+		mainPanel.add(mid, BorderLayout.CENTER);
+		mainPanel.add(bottom, BorderLayout.SOUTH);
+
+		username.addFocusListener(new UsernameFocusListener());
+		password.addFocusListener(new PasswordFocusListener());
+
+		// Add listeners
+		buttonLogin.addActionListener(ae -> {
+			model.login(username.getText(), password.getText());
+		});
+		buttonRegister.addActionListener(ae -> {
+			model.register();
+		});
+
+		// Adding to Frame
+
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setContentPane(mainPanel);
+		this.pack();
+		this.setVisible(true);
+		this.setSize(450, 300);
+		this.setResizable(false);
+		this.setMinimumSize(this.getPreferredSize());
+		// SwingUtilities.updateComponentTreeUI(this);
+		model.addObserver(this);
+
+	}
+
+	/**
+	 * Focus listener class for username to cause default text to automatically disappear when the user clicks on the field.
+	 *
+	 */
+	private class UsernameFocusListener implements FocusListener {
+		public void focusGained(FocusEvent e) {
+			if (username.getText().equals("username")) {
+				username.setText("");
+			}
+		}
+
+		@Override
+		public void focusLost(FocusEvent e) {
+			if (username.getText().equals("")) {
+				username.setText("username");
+			}
+		}
+	}
+
+	/**
+	 * Focus listener class for password to cause default text to automatically disappear when the user clicks on the field.
+	 *
+	 */
+	private class PasswordFocusListener implements FocusListener {
+		@SuppressWarnings("deprecation")
+		public void focusGained(FocusEvent e) {
+			if (password.getText().equals("password")) {
+				password.setText("");
+			}
+		}
+
+		@SuppressWarnings("deprecation")
+		@Override
+		public void focusLost(FocusEvent e) {
+			if (password.getText().equals("")) {
+				password.setText("password");
+			}
+		}
+	}
+
+	/**
+	 * Update method for the logInView which is not used.
+	 */
+	@Override
+	public void update(Observable o, Object arg) {
+		this.dispose();
+	}
+}

@@ -1,0 +1,18 @@
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JPanel;
+
+public class AuctionRoomsTab extends JPanel implements Observer{
+
+	public AuctionRoomsTab(Server model){
+		
+	}
+	
+	@Override
+	public void update(Observable o, Object arg) {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

@@ -1,0 +1,103 @@
+package logIn;
+
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.Observable;
+
+import javax.swing.JOptionPane;
+
+import dependency.Protocol;
+
+public class RegisterModel extends Observable {
+	
+	long serialID;
+	Socket socket;
+	
+	public RegisterModel(Socket socket, long serialID){
+		
+		this.serialID = serialID;
+		this.socket = socket;
+		new Protocol();
+	}
+	
+	/**
+	 * simple version of sending the information of user to the server
+	 * in this version, only username and password are send
+	 * more information will be added in the future according to what
+	 * information we will have for a user profile
+	 * 
+	 * @param username
+	 * @param password
+	 * @param password2
+	 */
+	public boolean register(String username, String password){
+		
+		if(JOptionPane.showConfirmDialog(null, "register?","Alert", JOptionPane.YES_NO_OPTION)
+				== JOptionPane.NO_OPTION) return false;
+		
+		try {
+			DataInputStream in = new DataInputStream(socket.getInputStream());
+			DataOutputStream toServer = new DataOutputStream(socket.getOutputStream());
+			String str = Protocol.createMessage("register", username, password);
+			
+			toServer.writeUTF(str);
+			
+			String fromServer = in.readUTF();
+
+			String[] result = Protocol.decodeMessage(fromServer);
+
+			if (result[1].equals("true")){
+				JOptionPane.showMessageDialog(null, "succeed!", "confirmed", JOptionPane.INFORMATION_MESSAGE);
+				return true;
+			}else{
+				JOptionPane.showMessageDialog(null, "invalid username or password!", "request rejected", JOptionPane.ERROR_MESSAGE);
+				return false;
+			}
+		} catch (IOException e) {
+			return false;
+		}
+	
+	}
+	
+	/**
+	 * Username could only be characters or numbers
+	 * @param username
+	 * @return
+	 */
+	public boolean checkUsername(String username){
+		
+		//should also check if the username is in the database or not
+		
+		return username.matches("^[A-Za-z0-9]+$");
+	}
+	
+	/**
+	 * Password should only be characters or numbers
+	 * 
+	 * @param password
+	 * @param password2
+	 * @return
+	 */
+	public boolean checkPassword(String password, String password2){
+	
+		return password.matches("^[A-Za-z0-9]+$") && password.equals(password2) ;
+	}
+	
+	/**
+	 * back to login page
+	 */
+	public void back(){
+		
+		//RegisterView rv = new RegisterView(this);
+		logIn login = new logIn(socket, serialID);
+		new logInView(login, serialID);
+	}
+
+
+
+
+}
+

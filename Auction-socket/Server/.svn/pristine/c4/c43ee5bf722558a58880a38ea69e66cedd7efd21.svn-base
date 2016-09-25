@@ -1,0 +1,139 @@
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import java.util.Observable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import dependency.*;
+
+public class Server extends Observable {
+
+	final int port = 8000;
+	private ServerSocket serverSocket;
+
+	final int maxThreadNum = 200;
+	ExecutorService tasks = Executors.newFixedThreadPool(maxThreadNum);
+
+	long serialID;
+	private ArrayList<Room> rooms = new ArrayList<Room>();
+
+	protected Database database = new Database();
+	protected String order = " order by id";
+
+	public Server() throws SQLException {
+
+		// Default room
+		rooms.add(new Room("Default", "Open", "0", "Server"));
+		rooms.add(new Room("Default", "Open", "1", "Server"));
+		try {
+			serverSocket = new ServerSocket(port);
+			System.out.println("Miami Server started...");
+
+			serialID = 1L;
+
+			database.open();
+			new ConcurrentHashMap<Item, User>();
+
+			// view = new ServerView(this);
+
+			// create thread for each connection
+			while (true) {
+				Socket socket = serverSocket.accept();
+				tasks.execute(new ClientThread(socket, serialID++, this));
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public ResultSet getUserDatabase() throws SQLException {
+		ResultSet rs = database.runQuery("SELECT * FROM nameandpasswd");
+
+		setChanged();
+		notifyObservers(rs);
+
+		return rs;
+	}
+
+	public synchronized void addRoom(String name, String availability, String numberOfPlayers, String owner) {
+		rooms.add(new Room(name, availability, numberOfPlayers, owner));
+	}
+
+	/**
+	 * @return the rooms
+	 */
+	public synchronized ArrayList<Room> getRooms() {
+		return rooms;
+	}
+
+	public synchronized boolean login(String username, String password) {
+		try {
+			return database.checkLogin(username, password);
+		} catch (SQLException e) {
+			return false;
+		}
+	}
+
+	public synchronized boolean register(String username, String password) {
+		try {
+			if (database.checkUsername(username)) {
+				database.insert(username, password);
+				return true;
+			}
+		} catch (SQLException e) {
+			return false;
+		}
+		return false;
+	}
+
+	public synchronized void setStatus(int id) {
+		database.setStatus(id);
+	}
+
+	public synchronized void updateBid(int id, String user, double price) {
+		database.updateBid(id, user, price);
+	}
+
+	public synchronized void addItem(String name, String bider, String seller, double fixed_price, int time,
+			double start_price) throws NumberFormatException, SQLException {
+		database.addItem(name, bider, seller, fixed_price, time, start_price);
+	}
+
+	public synchronized ResultSet obtainBidList(String user) {
+		String query = "SELECT * FROM items WHERE owner = '" + user + "'";
+		return database.runQuery(query + order);
+	}
+
+	public synchronized ResultSet obtainItems(String user) {
+		String query = "SELECT * FROM items WHERE seller = '" + user + "'";
+		return database.runQuery(query + order);
+	}
+
+	public synchronized ResultSet search(String[] keyWords) {
+		String query = "";
+
+		if (keyWords.length == 0) {
+			query = "SELECT * FROM items";
+
+		} else if (keyWords.length == 1) {
+			query = "SELECT * FROM items WHERE name LIKE '%" + keyWords[0] + "%' AND status is null";
+
+		} else {
+			query = "SELECT * FROM items WHERE name LIKE '%" + keyWords[0] + "%' AND status is null";
+			for (int i = 1; i < keyWords.length; i++) {
+				query.concat("OR name LIKE '%" + keyWords[i] + "%'");
+			}
+		}
+
+		return database.runQuery(query + order);
+	}
+
+}

@@ -1,0 +1,182 @@
+package auction;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.sql.ResultSet;
+import java.util.Iterator;
+import java.util.Observable;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import dependency.*;
+import logIn.logIn;
+
+public class MarketModel extends Observable {
+
+	Socket socket = null;
+	JTable table = null;
+	MarketTable tableModel = null;
+	private Protocol protocol;
+	
+	private String money;
+
+	public MarketModel(Socket socket, JTable table, MarketTable tableModel) {
+		this.socket = socket;
+		this.table = table;
+		this.tableModel = tableModel;
+		protocol = new Protocol();
+		
+
+	}
+
+	public void addItem() {
+		table.updateUI();
+	}
+
+	public void cleanItems() {
+		tableModel.removeRows(0, tableModel.getRowCount());
+		table.updateUI();
+	}
+
+	public void getData() {
+		int col = tableModel.getColumnCount();
+		int row = tableModel.getRowCount();
+		for (int i = 0; i < col; i++) {
+			System.out.print(tableModel.getColumnName(i) + "\t");
+		}
+		System.out.print("\r\n");
+		for (int i = 0; i < row; i++) {
+			for (int j = 0; j < col; j++) {
+				System.out.print(tableModel.getValueAt(i, j) + "\t");
+			}
+			System.out.print("\r\n");
+		}
+		System.out.println("------------------------------------");
+	}
+
+	public void bid(String id, String price) {
+		try {
+			DataInputStream in = new DataInputStream(socket.getInputStream());
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+			
+			String user = logIn.user.getUsername();
+
+			String str = Protocol.createMessage("bid-item", id, price, user);
+
+			out.writeUTF(str);
+			out.flush();
+
+			String fromServer = in.readUTF();
+
+			String[] result = Protocol.decodeMessage(fromServer);
+
+			if(result[1].equals("confirmed"))
+				JOptionPane.showMessageDialog(null, "Bid successful!", "confirmed", JOptionPane.INFORMATION_MESSAGE);
+			else if(result[1].equals("get-item"))
+				JOptionPane.showMessageDialog(null, "Now you own this item !", "Congratulations", JOptionPane.INFORMATION_MESSAGE);
+			else 
+				JOptionPane.showMessageDialog(null, result[2], "Bid rejected", JOptionPane.ERROR_MESSAGE);
+
+			search("");
+
+			table.updateUI();
+		}
+
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void search(String searchText) {
+
+		try {
+			DataInputStream in = new DataInputStream(socket.getInputStream());
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+			String str = Protocol.createMessage("search", searchText);
+
+			out.writeUTF(str);
+			out.flush();
+
+			String fromServer = in.readUTF();
+
+			System.out.println(fromServer);
+			JSONArray result = Protocol.StringToJSONArray(fromServer);
+
+			cleanItems();
+			for (int i = 0; i < result.length(); i++) {
+				JSONObject tmp = (JSONObject) result.get(i);
+				addItem(tmp);
+			}
+
+			table.updateUI();
+		}
+
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private void addItem(JSONObject tmp) {
+		String id = String.format("%06d", tmp.getInt("id"));
+		String name = tmp.getString("name");
+		String time_left = tmp.getString("endtime");
+		String seller = tmp.getString("seller");
+		String fixed_price = "";
+		if (tmp.has("price"))
+			fixed_price = "" + tmp.getDouble("price");
+		String current_price = "";
+		if (tmp.has("currentprice"))
+			current_price = "" + tmp.getDouble("currentprice");
+		tableModel.addRow(id, name, time_left, seller, current_price, fixed_price);
+	}
+	
+
+	public  String updateMoney(){
+		
+		try {
+			DataInputStream in = new DataInputStream(socket.getInputStream());
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+			
+			String user = logIn.user.getUsername();
+
+			String str = Protocol.createMessage("updateMoney", user);
+
+			out.writeUTF(str);
+			out.flush();
+
+			String fromServer = in.readUTF();
+
+			System.out.println(fromServer);
+			
+			String[] result = Protocol.decodeMessage(fromServer);
+			
+			if(result[0].equals("updateMoney")){
+				
+				return result[1];
+			}
+	
+		}catch (IOException e) {
+			e.printStackTrace();
+			
+		}
+		return "0";
+		
+		
+	}
+	
+
+		
+
+		
+	
+}

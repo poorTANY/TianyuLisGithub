@@ -1,0 +1,176 @@
+package auction;
+
+import java.awt.Color;
+import java.net.Socket;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.BorderFactory;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingWorker;
+import javax.swing.table.TableColumnModel;
+
+import customComponents.CustomButton;
+import customComponents.CustomHeader;
+import customComponents.CustomLabel;
+import customComponents.CustomPanel;
+import customComponents.CustomTable;
+import customComponents.CustomTextArea;
+import logIn.logIn;
+
+public class MarketTab extends CustomPanel implements Observer {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	private JTable table = null;
+
+	private JScrollPane s_pan = null;
+
+	private CustomButton button_1 = null, button_2 = null, button_3 = null;
+	private CustomButton button_bid = null;
+
+	private CustomButton button_getIt = null;
+	private CustomButton button_search = null;
+
+	private CustomTextArea text_bid = new CustomTextArea();
+	private CustomTextArea text_search = new CustomTextArea();
+
+	private CustomLabel money = new CustomLabel("");
+	private CustomLabel moneyLabel = new CustomLabel("Money :");
+
+	MarketTable tableModel = null;
+	MarketModel model;
+
+	public MarketTab(Socket socket) {
+
+		tableModel = new MarketTable();
+		table = new JTable(tableModel);
+
+		MarketModel model = new MarketModel(socket, table, tableModel);
+		this.model = model;
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+		button_1 = new CustomButton("clean");
+		button_1.addActionListener(ae -> {
+			model.cleanItems();
+		});
+
+		button_2 = new CustomButton("add item");
+		button_2.addActionListener(ae -> {
+			model.addItem();
+		});
+
+		button_3 = new CustomButton("refresh");
+		button_3.addActionListener(ae -> {
+			disable(button_3);
+			model.search("");
+			money.setText(model.updateMoney());
+		});
+
+		button_bid = new CustomButton("bid");
+		button_bid.addActionListener(ae -> {
+			if (table.getSelectedRow() == -1)
+				JOptionPane.showMessageDialog(null, "please select an item", "alert", JOptionPane.INFORMATION_MESSAGE);
+			else
+				model.bid(table.getValueAt(table.getSelectedRow(), 0).toString(), text_bid.getText());
+			money.setText(model.updateMoney());
+		});
+
+		button_getIt = new CustomButton("get it");
+		button_getIt.addActionListener(ae -> {
+			model.getData();
+		});
+
+		button_search = new CustomButton("search");
+		button_search.addActionListener(ae -> {
+			model.search(text_search.getText());
+		});
+
+		setHorizontalAlignment(table);
+		TableColumnModel tcm = table.getColumnModel();
+
+		tcm.getColumn(0).setPreferredWidth(50);
+		tcm.getColumn(1).setPreferredWidth(150);
+		tcm.getColumn(2).setPreferredWidth(100);
+		tcm.getColumn(3).setPreferredWidth(100);
+
+		s_pan = new JScrollPane(table);
+
+		this.setLayout(null);
+		// add(button_1);
+		// add(button_2);
+		add(button_3);
+		button_1.setBounds(340, 20, 100, 35);
+		button_2.setBounds(440, 20, 100, 35);
+		button_3.setBounds(670, 492, 100, 35);
+
+		moneyLabel.setBounds(10, 500, 50, 20);
+		money.setBounds(60, 500, 50, 20);
+
+		money.setText(logIn.user.getCoins() + "");
+
+		add(money);
+		add(moneyLabel);
+
+		// bid part
+		add(text_bid);
+		add(button_bid);
+		// add(button_getIt);
+		button_bid.setBounds(550, 492, 100, 35);
+		button_getIt.setBounds(650, 492, 100, 35);
+		text_bid.setBounds(430, 500, 100, 20);
+		text_bid.setBorder(BorderFactory.createLineBorder(Color.black, 1));
+
+		// search part
+		add(text_search);
+		add(button_search);
+		text_search.setBounds(10, 45, 100, 20);
+		text_search.setBorder(BorderFactory.createLineBorder(Color.black, 1));
+		button_search.setBounds(120, 40, 100, 35);
+
+		add(s_pan);
+		s_pan.setBounds(10, 80, 760, 400);
+
+		// add content
+		model.search("");
+
+	}
+
+	private void setHorizontalAlignment(JTable table) {
+
+		CustomTable customTable = new CustomTable();
+		table.setDefaultRenderer(Object.class, customTable);
+		table.getTableHeader().setReorderingAllowed(false);
+		table.getTableHeader().setResizingAllowed(false);
+		table.getTableHeader().setDefaultRenderer(new CustomHeader());
+
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		// TODO Auto-generated method stub
+
+	}
+
+	static void disable(CustomButton b) {
+		b.setEnabled(false);
+		new SwingWorker<Object, Object>() {
+			@Override
+			protected Object doInBackground() throws Exception {
+				Thread.sleep(5000);
+				return null;
+			}
+
+			@Override
+			protected void done() {
+				b.setEnabled(true);
+			}
+		}.execute();
+	}
+}

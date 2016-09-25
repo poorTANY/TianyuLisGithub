@@ -1,0 +1,318 @@
+package waitingRoom;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingWorker;
+import javax.swing.Timer;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+import customComponents.CustomTable;
+
+import customComponents.CustomButton;
+import customComponents.CustomHeader;
+import customComponents.CustomLabel;
+import customComponents.CustomPanel;
+import customComponents.CustomTextField;
+
+public class WaitingRoomView extends CustomPanel implements Observer{
+
+	/**
+	 * @author jep537
+	 * WaitingRoomVierw creates a JPanel which contains all the necessary features for the user to log in. The class
+	 * uses custom components created for the GUI and sets up a method for automatic updates of the room table every
+	 * 15 seconds.
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	private WaitingRoom model;
+	
+	private JFrame frame = null;
+	 
+    private JTable table = null;
+ 
+    private JScrollPane s_pan = null;
+ 
+    private CustomButton button_1 = null, button_2 = null, button_3 = null, button_4 = null, confirmButton, cancelButton;
+    
+    private CustomTextField roomName;
+    
+    private JComboBox<String> availability;
+    
+    private JComboBox<Integer> numberOfPlayers;
+    
+    private CustomLabel roomLabel, availabilityLabel, numberOfPlayersLabel;
+    
+    private boolean creation = false;
+    
+    private Timer timer;
+    
+    /**
+     * Constructor for WaitingRoomView
+     * @param model WaitingRoom model for this object
+     * @param table Table model for the room table
+     * @param frame Frame for this class to be shown in
+     */
+    public WaitingRoomView(WaitingRoom model, JTable table, JFrame frame) {
+		
+    	this.table = table;
+		this.frame = frame;
+		this.model = model;
+		model.addObserver(this);
+		frame.setTitle("Waiting Room");
+		frame.setSize(1000, frame.getHeight());
+		
+		roomName = new CustomTextField("",10);
+		String[] aOptions = {"Open", "Closed"};
+		availability = new JComboBox<String>(aOptions);
+		Integer[] pOptions = {2,3,4};
+		numberOfPlayers = new JComboBox<Integer>(pOptions);
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		roomLabel = new CustomLabel("Room Name");
+		availabilityLabel = new CustomLabel("Availability");
+		numberOfPlayersLabel = new CustomLabel("Max Players");
+        
+		 button_1 = new CustomButton("Add Room",12);
+		 button_1.addActionListener(ae -> {creation = true; showRoomCreationOptions();});
+	        
+	     button_2 = new CustomButton("Edit Room",12);
+	     button_2.addActionListener(ae -> {creation = false; showRoomEditOptions();});
+	        
+	     button_3 = new CustomButton("Select Room",12);
+	     button_3.addActionListener(ae -> {if(table.getSelectedRow() != -1){model.selectRoom(table.getValueAt(table.getSelectedRow(), 1).toString());}else{
+				JOptionPane.showMessageDialog(frame,
+						"Please select a room",
+					    "Error",
+					    JOptionPane.WARNING_MESSAGE);
+			}});
+	        
+	     button_4 = new CustomButton("Refresh",12);
+	     button_4.addActionListener(ae -> {disable(button_4); timer.restart(); model.checkForRooms();});
+	        
+	     confirmButton = new CustomButton("Confirm",12);
+	     confirmButton.addActionListener(ae ->
+	     	{
+	     		if(creation == true){
+	     		if(!roomName.getText().equals("")){
+	     	model.addRoom(roomName.getText(), (String)availability.getSelectedItem(), (Integer)numberOfPlayers.getSelectedItem());
+	     	hideRoomCreationOptions();
+	     	roomName.setText("");}
+	     		else{
+	     			JOptionPane.showMessageDialog(frame,
+							"Invalid Room name",
+						    "Error",
+						    JOptionPane.WARNING_MESSAGE);;	
+	     			}
+	     		}
+	     		else{
+	     			if(table.getSelectedRow() != -1){model.editRoom(table.getValueAt(table.getSelectedRow(), 1).toString(), table.getValueAt(table.getSelectedRow(), 4).toString(), availability.getSelectedItem().toString(), numberOfPlayers.getSelectedItem().toString());
+	     			hideRoomEditOptions();
+	     		}
+	     	}
+	     	});
+	     
+	     cancelButton = new CustomButton("Cancel",12);
+	     cancelButton.addActionListener(ae -> {if(creation == true){
+	    	 hideRoomCreationOptions();}
+	    	 else{
+	    		 hideRoomEditOptions();
+	    	 }
+	     });
+	        
+	        roomName.setVisible(false);
+			availability.setVisible(false);
+			numberOfPlayers.setVisible(false);
+			confirmButton.setVisible(false);
+			roomLabel.setVisible(false);
+			availabilityLabel.setVisible(false);
+			numberOfPlayersLabel.setVisible(false);
+			cancelButton.setVisible(false);
+        
+        
+        setTableFormatting(table);
+        TableColumnModel tcm = table.getColumnModel();
+        
+        tcm.getColumn(0).setPreferredWidth(50);
+        tcm.getColumn(1).setPreferredWidth(100);
+        tcm.getColumn(2).setPreferredWidth(100);
+        tcm.getColumn(3).setPreferredWidth(100);
+ 
+        s_pan = new JScrollPane(table);
+        
+        this.setLayout(null);
+        add(button_1);
+        add(button_2);
+        add(button_3);
+        add(button_4);
+        add(roomLabel);
+	    add(roomName);
+	    add(availabilityLabel);
+	    add(availability);
+	    add(numberOfPlayersLabel);
+	    add(numberOfPlayers);
+	    add(confirmButton);
+	    add(cancelButton);
+        button_1.setBounds(220, 20, 120, 35);
+        button_2.setBounds(420, 20, 120, 35);
+        button_3.setBounds(620, 20, 140, 35);
+        button_4.setBounds(860, 500, 120, 35);
+        roomLabel.setBounds(80,20,100,35);
+        roomName.setBounds(190, 20, 100, 35);
+        availabilityLabel.setBounds(300, 20, 100, 35);
+        availability.setBounds(390,20,100,35);
+        numberOfPlayersLabel.setBounds(500,20,100,35);
+        numberOfPlayers.setBounds(600,20,100,35);
+        confirmButton.setBounds(720,20,100,35);
+        cancelButton.setBounds(840, 20, 100, 35);
+        add(s_pan);
+        s_pan.setBounds(10, 80, 970, 400);
+        
+        frame.add(this);
+        frame.setVisible(true);
+        frame.setResizable(false);
+        startTimer();
+ 		
+   	}
+	
+    /**
+     * Sets the table formatting
+     * @param table Table to be formatted.
+     */
+	private void setTableFormatting(JTable table) {
+	      
+		CustomTable customTable = new CustomTable();
+		table.setDefaultRenderer(Object.class, customTable);
+		table.getTableHeader().setDefaultRenderer(new CustomHeader());
+		
+	}
+	
+	/**
+	 * Shows all buttons necessary for creation of rooms and hides the other buttons.
+	 */
+	public void showRoomCreationOptions(){
+		roomName.setVisible(true);
+		availability.setVisible(true);
+		numberOfPlayers.setVisible(true);
+		confirmButton.setVisible(true);
+		roomLabel.setVisible(true);
+		availabilityLabel.setVisible(true);
+		numberOfPlayersLabel.setVisible(true);
+		cancelButton.setVisible(true);
+		button_1.setVisible(false);
+		button_2.setVisible(false);
+		button_3.setVisible(false);
+		
+	}
+	
+	/**
+	 * Hides all buttons necessary for creation of rooms and shows the other buttons.
+	 */
+	public void hideRoomCreationOptions(){
+		roomName.setVisible(false);
+		availability.setVisible(false);
+		numberOfPlayers.setVisible(false);
+		confirmButton.setVisible(false);
+		roomLabel.setVisible(false);
+		availabilityLabel.setVisible(false);
+		numberOfPlayersLabel.setVisible(false);
+		button_1.setVisible(true);
+		button_2.setVisible(true);
+		button_3.setVisible(true);
+		cancelButton.setVisible(false);
+	}
+	
+	/**
+	 * Shows all buttons necessary for editing rooms and hides the other buttons.
+	 */
+	public void showRoomEditOptions(){
+		availability.setVisible(true);
+		numberOfPlayers.setVisible(true);
+		confirmButton.setVisible(true);
+		availabilityLabel.setVisible(true);
+		numberOfPlayersLabel.setVisible(true);
+		cancelButton.setVisible(true);
+		button_1.setVisible(false);
+		button_2.setVisible(false);
+		button_3.setVisible(false);
+	}
+	
+	 /**
+	  * Hides all buttons necessary for editing rooms and shows the other buttons.
+	  */
+	public void hideRoomEditOptions(){
+		availability.setVisible(false);
+		numberOfPlayers.setVisible(false);
+		confirmButton.setVisible(false);
+		availabilityLabel.setVisible(false);
+		numberOfPlayersLabel.setVisible(false);
+		cancelButton.setVisible(false);
+		button_1.setVisible(true);
+		button_2.setVisible(true);
+		button_3.setVisible(true);
+	}
+	
+
+	/**
+	 * Update method (unused).
+	 */
+	@Override
+	public void update(Observable o, Object arg) {
+	}
+	
+	/**
+	 * Begins a timer which calls the table refresh method every 15 seconds.
+	 */
+	public void startTimer(){
+		timer = new Timer(0, new ActionListener() {
+	
+			   @Override
+			   public void actionPerformed(ActionEvent e) {
+				  disable(button_4);
+			      model.checkForRooms();
+			   }
+			});
+	
+			timer.setDelay(15000);
+			timer.start();
+	}
+	
+	/**
+	 * Ends the timer.
+	 */
+	public void stopTimer(){
+		timer.stop();
+	}
+	
+	/**
+	 * Disables a button for 5 seconds to prevent spamming of a button.
+	 * @param b Button to be disabled.
+	 */
+	static void disable(JButton b) {
+	    b.setEnabled(false);
+	    new SwingWorker<Object, Object>() {
+	        @Override protected Object doInBackground() throws Exception {
+	            Thread.sleep(5000);
+	            return null;
+	        }
+	        @Override protected void done() {
+	            b.setEnabled(true);
+	        }
+	    }.execute();
+	}
+	
+
+}

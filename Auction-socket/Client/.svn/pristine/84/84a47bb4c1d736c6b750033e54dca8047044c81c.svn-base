@@ -1,0 +1,125 @@
+package auction;
+
+import java.awt.Color;
+import java.net.Socket;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+
+public class MarketTab extends JPanel implements Observer {
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	 
+    private JTable table = null;
+ 
+    private JScrollPane s_pan = null;
+ 
+    private JButton button_1 = null, button_2 = null, button_3 = null;
+    private JButton button_bid = null;
+    
+    private JButton button_getIt = null;
+    private JButton button_search = null;
+
+    private JTextArea text_bid = new JTextArea();
+    private JTextArea text_search = new JTextArea();
+    
+    MarketTable tableModel = null;
+    
+    
+	public MarketTab(Socket socket) {
+		
+		tableModel = new MarketTable();
+		table = new JTable(tableModel);
+		
+		MarketModel model = new MarketModel(socket, table, tableModel);
+		
+        button_1 = new JButton("clean");
+        button_1.addActionListener(ae -> {model.cleanItems();});
+        
+        button_2 = new JButton("add item");
+        button_2.addActionListener(ae -> {model.addItem();});
+        
+        button_3 = new JButton("information");
+        button_3.addActionListener(ae -> {model.getData();});
+
+        button_bid = new JButton("bid");
+        button_bid.addActionListener(ae -> {model.bid();});
+
+        button_getIt = new JButton("get it");
+        button_getIt.addActionListener(ae -> {model.getData();});
+        
+        button_search = new JButton("search");
+        button_search.addActionListener(ae -> {model.search(text_search.getText());});
+        
+        
+        table.setBackground(Color.white);
+        setHorizontalAlignment(table);
+        TableColumnModel tcm = table.getColumnModel();
+        
+        tcm.getColumn(0).setPreferredWidth(50);
+        tcm.getColumn(1).setPreferredWidth(150);
+        tcm.getColumn(2).setPreferredWidth(100);
+        tcm.getColumn(3).setPreferredWidth(100);
+ 
+        s_pan = new JScrollPane(table);
+        
+        this.setLayout(null);
+        add(button_1);
+        add(button_2);
+        add(button_3);
+        button_1.setBounds(340, 20, 100, 35);
+        button_2.setBounds(440, 20, 100, 35);
+        button_3.setBounds(540, 20, 100, 35);
+        
+        // bid part
+        add(text_bid);
+        add(button_bid);
+        add(button_getIt);
+        button_bid.setBounds(580, 492, 80, 31);
+        button_getIt.setBounds(650, 492, 80, 31);
+        text_bid.setBounds(530, 499, 50, 17);
+        text_bid.setBorder(BorderFactory.createLineBorder(Color.black,1));
+        
+        //search part
+        add(text_search);
+        add(button_search);
+        text_search.setBounds(10, 50, 100, 17);
+        text_search.setBorder(BorderFactory.createLineBorder(Color.black,1));
+        button_search.setBounds(110, 44, 80, 31);
+        
+        add(s_pan);
+        s_pan.setBounds(10, 80, 760, 400);
+		
+		//add content
+	}
+	
+	private void setHorizontalAlignment(JTable table) {
+		DefaultTableCellRenderer tableCellRenderer = new DefaultTableCellRenderer();
+		tableCellRenderer.setHorizontalAlignment(JLabel.LEFT);
+		for(int i = 0; i< table.getColumnCount();i++)  
+        {  
+            TableColumn col = table.getColumn(table.getColumnName(i));  
+            col.setCellRenderer(tableCellRenderer);  
+        }
+	}
+	
+	@Override
+	public void update(Observable o, Object arg) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

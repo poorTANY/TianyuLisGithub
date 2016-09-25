@@ -1,0 +1,27 @@
+package customComponents;
+
+import java.awt.Color;
+import java.awt.Font;
+
+import javax.swing.BorderFactory;
+import javax.swing.JTextField;
+
+public class CustomTextField extends JTextField{
+	
+	public CustomTextField(String b, int a){
+		super(b, a);
+		setBorder(BorderFactory.createLineBorder(Color.black,1));
+		setBackground(Color.WHITE);
+		setFont(new Font("Apple Casual", 1, 12));
+		setForeground(Color.BLACK);
+	}
+	
+	public CustomTextField(){
+		
+		setBorder(BorderFactory.createLineBorder(Color.black,1));
+		setBackground(Color.WHITE);
+		setFont(new Font("Apple Casual", 1, 12));
+		setForeground(Color.BLACK);
+	}
+	
+}

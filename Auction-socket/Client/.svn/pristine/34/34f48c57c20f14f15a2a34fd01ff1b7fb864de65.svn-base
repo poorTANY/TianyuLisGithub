@@ -1,0 +1,84 @@
+import java.io.*;
+import java.net.Socket;
+
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+
+// our own libraries
+import dependency.*;
+import logIn.logIn;
+import logIn.logInView;
+import waitingRoom.*;
+import auction.*;
+
+public class Client {
+	
+	// connecting part
+	int port = 8000;
+	String host = "localhost";
+    static Socket socket;
+	long serialID;
+	JFrame view;
+	
+	DataInputStream in ;
+	DataOutputStream out;
+	
+	//static Client client = null;
+	
+	public Client() {
+		try {
+			socket = new Socket(host, port);
+			//socket.setSoTimeout(2000);
+			in = new DataInputStream(socket.getInputStream());
+			out = new DataOutputStream(socket.getOutputStream());
+			
+			start();
+			
+			// server connecting
+			}
+		catch (IOException e) {}
+	}
+	
+	
+	
+	// user information part
+	User user;
+	
+	public void start() throws IOException{
+		
+		out.writeUTF("connect to Miami");
+		out.flush();
+		
+		String echo = in.readUTF();
+		System.out.println(echo);
+		if(echo.equals("Welcome! - Miami")) {
+			
+			serialID = in.readLong();
+			
+			System.out.printf("server connected! - serialID:0x%04x\n", serialID);
+			
+			//logIn authority = new logIn(socket, serialID);
+			
+			//view = new logInView(authority, serialID);
+			
+			process();
+			
+		}
+		else {
+			System.out.println("rejected!");
+			JOptionPane.showMessageDialog(null, "connecting rejected!", "alert", JOptionPane.ERROR_MESSAGE); 
+		}
+	
+	}
+	
+	public void process(){
+		
+		logIn authority = new logIn(socket, serialID);
+		
+		logInView lv = new logInView(authority, serialID);
+		
+		
+
+		
+	}
+}

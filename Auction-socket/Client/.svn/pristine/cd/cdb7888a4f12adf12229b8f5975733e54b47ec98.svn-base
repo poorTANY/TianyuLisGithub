@@ -1,0 +1,88 @@
+package logIn;
+
+import java.io.IOException;
+import java.net.Socket;
+import java.util.Observable;
+
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+
+import dependency.*;
+
+import waitingRoom.WaitingRoom;
+
+public class logIn extends Observable {
+
+	private User user = null;
+	private boolean accepted = false;
+	private long serialID;
+	private Socket socket;
+	public logIn(Socket socket, long serialID) {
+
+		this.serialID = serialID;
+		this.socket = socket;
+	}
+
+	protected void login(String username, String password) throws IOException {
+		if (checkLogin(username, password)) {
+
+			user = new User(username, password);
+			System.out.println("login succeed!");
+			
+			JFrame frame = new JFrame();
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setSize(800, 600);
+			new WaitingRoom(socket, frame, username);
+
+		} else {
+			JOptionPane.showMessageDialog(null, "access denied!", "alert", JOptionPane.ERROR_MESSAGE);
+
+			new logInView(this, serialID);
+		}
+	}
+
+	private boolean checkLogin(String username, String password) throws IOException {
+		
+		/*
+		DataInputStream in = new DataInputStream(socket.getInputStream());
+		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+		String str = protocol.createMessage("login", username, password);
+
+		System.out.println("To server:" + str);
+
+		out.writeUTF(str);
+		out.flush();
+
+		String fromServer = in.readUTF();
+
+		System.out.println(fromServer);
+
+		String[] results = protocol.decodeMessage(fromServer);
+
+		if (results[0].equals("bool")) {
+
+			if (results[1].equals("true")) {
+				return true;
+			}
+		}
+
+		return false;*/
+		
+		return true;
+	}
+
+	public User getUser() {
+		return user;
+	}
+
+	public boolean isAccept() {
+		return accepted;
+	}
+
+	protected void register() {
+		RegisterModel rm = new RegisterModel(socket, this.serialID);
+		new RegisterView(rm);
+	}
+
+}

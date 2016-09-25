@@ -1,0 +1,217 @@
+package waitingRoom;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Observable;
+import java.util.Timer;
+
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
+
+import auction.*;
+import dependency.Protocol;
+
+public class WaitingRoom extends Observable {
+	Socket socket;
+	JFrame frame;
+	JTable table = null;
+	RoomTable tableModel = null;
+	private boolean validRoomName = true;
+	private String selectRoomErrorMessage = "";
+	private String username;
+	private WaitingRoomView view;
+
+	public WaitingRoom(Socket socket, JFrame frame, String username) {
+		this.socket = socket;
+		tableModel = new RoomTable();
+		table = new JTable(tableModel);
+		this.frame = frame;
+		view = new WaitingRoomView(this, table, frame);
+		this.username = username;
+		checkForRooms();
+	}
+
+	public void addRoom(String name, String availability, Integer numberOfPlayers) {
+
+		try {
+			DataInputStream in = new DataInputStream(socket.getInputStream());
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+			String str = Protocol.createMessage("create-room", name, availability, numberOfPlayers.toString(), username);
+
+			out.writeUTF(str);
+			out.flush();
+
+			String fromServer = in.readUTF();
+
+			String[] results = Protocol.decodeMessage(fromServer);
+
+			if (results[0].equals("create-room")) {
+				if (results[1].equals("true")) {
+					tableModel.addRow(name, availability, "0/" + numberOfPlayers, username);
+					table.updateUI();
+				} else {
+					validRoomName = false;
+					setChanged();
+					notifyObservers(validRoomName);
+				}
+			}
+		}
+
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void cleanRoom() {
+		tableModel.removeRows(0, tableModel.getRowCount());
+		table.updateUI();
+	}
+
+	public void getData() {
+		int col = tableModel.getColumnCount();
+		int row = tableModel.getRowCount();
+		for (int i = 0; i < col; i++) {
+			System.out.print(tableModel.getColumnName(i) + "\t");
+		}
+		System.out.print("\r\n");
+		for (int i = 0; i < row; i++) {
+			for (int j = 0; j < col; j++) {
+				System.out.print(tableModel.getValueAt(i, j) + "\t");
+			}
+			System.out.print("\r\n");
+		}
+		System.out.println("------------------------------------");
+	}
+
+	public void checkForRooms() {
+		try {
+			DataInputStream in = new DataInputStream(socket.getInputStream());
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+			String[] toSendArray = {"roomCheck"};
+
+			String str = Protocol.createMessage(toSendArray);
+
+			out.writeUTF(str);
+			out.flush();
+
+			String fromServer = in.readUTF();
+
+			String[] results = Protocol.decodeMessage(fromServer);
+
+			cleanRoom();
+			
+			if (results[0].equals("roomCheck")) {
+				for (int i = 1; i < results.length - 1; i += 4) {
+					tableModel.addRow(results[i], results[i + 1], results[i + 2], results[i+3]);
+				}
+			}
+
+			table.updateUI();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void selectRoom(String selectedRoom) {
+
+		try {
+			DataInputStream in = new DataInputStream(socket.getInputStream());
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+			ArrayList<String> toSend = new ArrayList<String>();
+			toSend.add("select-room");
+			toSend.add(selectedRoom);
+
+			String[] toSendArray = new String[toSend.size()];
+			toSendArray = toSend.toArray(toSendArray);
+
+			String str = Protocol.createMessage(toSendArray);
+
+			out.writeUTF(str);
+			out.flush();
+
+			String fromServer = in.readUTF();
+
+			String[] results = Protocol.decodeMessage(fromServer);
+
+			if (results[0].equals("select-room")) {
+				if (results[1].equals("true")) {
+					view.stopTimer();
+					new Auction(socket, frame);
+				}
+				else {
+					selectRoomErrorMessage = results[2];
+					JOptionPane.showMessageDialog(frame,
+							selectRoomErrorMessage,
+						    "Error",
+						    JOptionPane.WARNING_MESSAGE);
+					setChanged();
+					notifyObservers(selectRoomErrorMessage);
+				}
+			} 
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+	
+	public void editRoom(String selectedRoom, String owner, String availability, String numberOfPlayers){
+		if(username.equals(owner)){
+			try{
+				DataInputStream in = new DataInputStream(socket.getInputStream());
+				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+				
+				String[] toSendArray = {"edit-room", selectedRoom, availability, numberOfPlayers};
+				
+				String str = Protocol.createMessage(toSendArray);
+
+				out.writeUTF(str);
+				out.flush();
+				
+				String fromServer = in.readUTF();
+				
+				String[] results = Protocol.decodeMessage(fromServer);
+				
+				if (results[0].equals("edit-room")) {
+					if (results[1].equals("complete")) {
+						checkForRooms();
+					}
+				}
+			}
+			catch(IOException e){
+				e.printStackTrace();
+			}
+			
+		}
+		else{
+			
+		}
+	}
+
+	public String getSelectRoomErrorMessage() {
+		return selectRoomErrorMessage;
+	}
+
+	public boolean isValidRoomName() {
+		return validRoomName;
+	}
+
+	public void setValidRoomName(boolean validRoomName) {
+		this.validRoomName = validRoomName;
+	}
+
+	public void setSelectRoomErrorMessage(String selectRoomErrorMessage) {
+		this.selectRoomErrorMessage = selectRoomErrorMessage;
+	}
+
+	
+	
+}

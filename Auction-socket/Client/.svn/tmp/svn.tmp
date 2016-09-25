@@ -1,0 +1,129 @@
+package logIn;
+
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+
+public class RegisterView extends JPanel implements Observer {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private JTextField username = new JTextField("username", 30);
+	private JLabel usernameLabel = new JLabel("Username");
+	private JPasswordField password = new JPasswordField("password", 30);
+	private JLabel passwordLabel = new JLabel("Password");
+	private JPasswordField passwordCheck = new JPasswordField("password", 30);
+	private JLabel passwordCheckLabel = new JLabel("Password Check");
+	private JTextField emailAddress = new JTextField("", 30);
+	private JLabel emailAddressLabel = new JLabel("E-mail Address");
+	private JButton buttonBack = new JButton("Back");
+	private JButton buttonRegister = new JButton("register");
+
+	private JFrame frame;
+
+	// private static final long serialVersionUID = 1L;
+
+	@SuppressWarnings("deprecation")
+	public RegisterView(RegisterModel model) {
+
+		this.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.insets = new Insets(10, 10, 10, 10);
+
+		c.gridx = 0;
+		c.gridy = 1;
+		add(usernameLabel, c);
+
+		c.gridx = 0;
+		c.gridy = 2;
+		add(username, c);
+
+		c.gridx = 0;
+		c.gridy = 3;
+		add(passwordLabel, c);
+
+		c.gridx = 0;
+		c.gridy = 4;
+		add(password, c);
+
+		c.gridx = 0;
+		c.gridy = 5;
+		add(passwordCheckLabel, c);
+
+		c.gridx = 0;
+		c.gridy = 6;
+		add(passwordCheck, c);
+
+		c.gridx = 0;
+		c.gridy = 7;
+		add(emailAddressLabel, c);
+
+		c.gridx = 0;
+		c.gridy = 8;
+		add(emailAddress, c);
+
+		c.gridx = 1;
+		c.gridy = 10;
+		add(buttonBack, c);
+
+		c.gridx = 2;
+		c.gridy = 10;
+		add(buttonRegister, c);
+
+		model.addObserver(this);
+
+		frame = new JFrame();
+		JFrame.setDefaultLookAndFeelDecorated(true);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setContentPane(this);
+		frame.pack();
+		frame.setVisible(true);
+		frame.setSize(800, 600);
+		frame.setMinimumSize(this.getPreferredSize());
+
+		// buttonBack.addActionListener(ae -> {model.;});
+		buttonRegister.addActionListener(ae ->
+
+		// should show success message here, haven't add this
+		{
+			if (model.sendToServer(username.getText(), password.getText(), passwordCheck.getText())) {
+
+				model.create(username.getText(), password.getText());
+
+				frame.dispose();
+
+				System.out.println("Register sucessfully");
+				model.back();
+
+			} else {
+				JOptionPane.showMessageDialog(null, "invalid username or password!", "alert",
+						JOptionPane.ERROR_MESSAGE);
+			}
+
+		});
+
+		buttonBack.addActionListener(ae -> {
+			frame.dispose();
+			model.back();
+		});
+
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+
+	}
+
+}

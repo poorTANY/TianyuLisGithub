@@ -1,0 +1,169 @@
+package auction;
+
+import java.awt.Color;
+import java.net.Socket;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.BorderFactory;
+import javax.swing.JComboBox;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingWorker;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
+
+import customComponents.CustomButton;
+import customComponents.CustomHeader;
+import customComponents.CustomLabel;
+import customComponents.CustomPanel;
+import customComponents.CustomTable;
+import customComponents.CustomTextArea;
+
+public class SellerTab extends CustomPanel implements Observer {
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	 
+    private JTable table = null;
+ 
+    private JScrollPane s_pan = null;
+    
+    SellerTable tableModel = null;
+    private SellerModel model;
+    CustomButton button_refresh;
+    
+    
+	public SellerTab(Socket socket) {
+		
+		tableModel = new SellerTable();
+		table = new JTable(tableModel);
+		
+		SellerModel model = new SellerModel(socket, table, tableModel);
+		this.model = model;
+        
+        
+        table.setBackground(Color.white);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        setHorizontalAlignment(table);
+ 
+        s_pan = new JScrollPane(table);
+        
+        this.setLayout(null);
+        
+        //new auction
+        CustomLabel label_newAuction = new CustomLabel("new auction");
+        CustomLabel label_name = new CustomLabel("item:");
+        CustomTextArea text_name = new CustomTextArea();
+        CustomLabel label_time = new CustomLabel("time(minutes):");
+        CustomTextArea text_time = new CustomTextArea();
+        //String[] time = { "2 hrs", "8 hrs", "24 hrs" };
+        //JComboBox<String> box_time = new JComboBox<String>(time);
+        CustomLabel label_startPrice = new CustomLabel("reserve price:");
+        CustomTextArea text_startPrice = new CustomTextArea();
+        CustomLabel label_fixedPrice = new CustomLabel("fixed price:");
+        CustomTextArea text_fixedPrice = new CustomTextArea();
+        CustomLabel label_discription = new CustomLabel("discription:");
+        CustomTextArea text_discription = new CustomTextArea();
+        CustomButton button_confirm = new CustomButton("confirm");
+        
+        label_newAuction.setBounds(30, 30, 100, 17);
+        label_name.setBounds(20, 60, 100, 17);
+        label_time.setBounds(20, 110,100,17);
+        label_startPrice.setBounds(20,160,100,17);
+        label_fixedPrice.setBounds(20,210,100,17);
+        label_discription.setBounds(20,260,100,17);
+        
+        text_name.setBounds(20, 80, 150, 17);
+        text_time.setBounds(20, 130, 150, 17);
+        //box_time.setBounds(40, 130, 110, 17);
+        text_startPrice.setBounds(20, 180, 150, 17);
+        text_fixedPrice.setBounds(20, 230, 150, 17);
+        text_discription.setBounds(20, 280, 150, 190);
+        button_confirm.setBounds(50,480,80,31);
+        
+        text_name.setBorder(BorderFactory.createLineBorder(Color.black,1));
+        //box_time.setBorder(BorderFactory.createLineBorder(Color.black,1));
+        text_startPrice.setBorder(BorderFactory.createLineBorder(Color.black,1));
+        text_fixedPrice.setBorder(BorderFactory.createLineBorder(Color.black,1));
+        text_discription.setBorder(BorderFactory.createLineBorder(Color.black,1));
+        text_discription.setLineWrap(true);
+        
+        add(label_newAuction);
+        add(label_name);
+        add(text_name);
+        add(label_time);
+        //add(box_time);
+        add(text_time);
+        add(label_startPrice);
+        add(text_startPrice);
+        add(label_fixedPrice);
+        add(text_fixedPrice);
+        add(label_discription);
+        add(text_discription);
+        add(button_confirm);
+        button_confirm.addActionListener(
+        		ae -> {model.publishItem(text_name.getText(),
+        					             //box_time.getSelectedIndex(),
+        					             text_time.getText(),
+        					             text_startPrice.getText(),
+        					             text_fixedPrice.getText());});
+        
+        //separator
+        JSeparator separator = new JSeparator(JSeparator.VERTICAL);
+        separator.setBounds(190, 20, 10, 500);
+        add(separator);
+        
+        //Items
+        CustomLabel label_yourItems = new CustomLabel("your items");
+        CustomButton button_close = new CustomButton("close");
+        button_refresh = new CustomButton("refresh");
+        label_yourItems.setBounds(210, 30, 100, 17);
+        button_close.setBounds(690, 480, 80, 31);
+        button_close.addActionListener(ae -> {model.close(table.getValueAt(table.getSelectedRow(), 0).toString());});
+        button_refresh.setBounds(610, 480, 80, 31);
+        button_refresh.addActionListener(ae -> {disable(button_refresh);model.getMyItems();});
+        add(label_yourItems);
+        add(button_close);
+        add(button_refresh);
+        
+        add(s_pan);
+        s_pan.setBounds(210, 55, 560, 420);
+		
+		//add content
+        model.getMyItems();
+	}
+	
+	private void setHorizontalAlignment(JTable table) {
+		
+		CustomTable customTable = new CustomTable();
+		table.setDefaultRenderer(Object.class, customTable);
+		table.getTableHeader().setReorderingAllowed(false);
+		table.getTableHeader().setResizingAllowed(false);
+		table.getTableHeader().setDefaultRenderer(new CustomHeader());
+
+	}
+	
+	@Override
+	public void update(Observable o, Object arg) {
+		// TODO Auto-generated method stub
+
+	}
+	
+	static void disable(CustomButton b) {
+	    b.setEnabled(false);
+	    new SwingWorker() {
+	        @Override protected Object doInBackground() throws Exception {
+	            Thread.sleep(5000);
+	            return null;
+	        }
+	        @Override protected void done() {
+	            b.setEnabled(true);
+	        }
+	    }.execute();
+	}
+}
